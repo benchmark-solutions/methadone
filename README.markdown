@@ -169,7 +169,8 @@ to Ruby mixins.
     });
 
 When you mixin a class, Methadone.js will instantiate an instance of
-this class for you regardless of whether or not you 
+this class for you regardless of whether or not you provide
+constructor arguments.
 
     methadone(function() {
 
@@ -216,7 +217,7 @@ Strict mode is enabled via a Methadone.js annotation.
 You need only apply this annotation once, in any methadone code block;
 once set, all modules and classes in all scripts will be treated 
 strictly.  In strict mode, dependencies must be declared explicitly 
-with the _import function.
+with the Import annotation:
 
     methadone(function() {
 
