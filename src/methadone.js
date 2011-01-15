@@ -214,8 +214,6 @@
     return obj;
   }
 
-  window.get = getOrCreate;
-
   function extend(target) {
     var args = Array.prototype.slice.call(arguments);
     args = args.slice(1);
@@ -232,8 +230,6 @@
     }
     return target;
   }
-
-  ;
 
   /**
    * Finds all of the dependencies for a set of modules

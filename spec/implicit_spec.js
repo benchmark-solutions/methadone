@@ -28,6 +28,29 @@ describe("Strict mode", function() {
 
 
 
+  it("Parses a module with dependencies obscrued by bizarre roadblocks", function() {
+    var errors = methtest(function() { 
+      Module: Strict.BizarreDeps3 = function() {
+        this.result = function() { 
+          return  /*  //  */ Strict.BizarreDeps.result() /* // */ + Strict.BizarreDeps2.result();
+        }
+      }
+
+      Module: Strict.BizarreDeps = function() {
+        this.result = function() { return "PA"; }
+      }
+
+      Module: Strict.BizarreDeps2 = function() {
+        this.result = function() { return "SS"; }
+      }
+    });
+
+    expect(Strict.BizarreDeps3.result()).toEqual("PASS");
+    expect(errors.length).toEqual(0);
+  });
+
+
+
   it("Parses Strings without detecting dependencies", function() {
     var errors = methtest(function() { 
       Module: Strict.ParseString = function() {

@@ -1,5 +1,5 @@
 # Methadone.js #
-OOP Framework for Javascript
+Dependency Management for Javascript
 
 
 
@@ -7,11 +7,12 @@ OOP Framework for Javascript
 ## Overview ##
 
 Despite a cavalcade of frameworks, libraries, toolkits and other
-gizmos, OOP in Javascript is still a pain.  There's always a catch -
-either you need to pre-process your Javascript, or your classes
-are loaded via XMLHttpRequest/eval (yuck!), or you are required to
-import dependencies explicitly in every class via a bizarre string
-based naming system (requiring special IDE support).
+gizmos, Dependency management in Javascript is still a pain.  
+There's always a catch -  either you need to pre-process your 
+Javascript, or your classes are loaded via XMLHttpRequest/eval 
+(yuck!), or you are required to import dependencies explicitly in 
+every class via a bizarre string based naming system (requiring 
+special IDE support).  Methadone.js aims to fix all that:
 
 - Runs directly in the browser with no pre-processing - what you see
   in the IDE is what you get in the browser.
