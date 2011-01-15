@@ -37,14 +37,26 @@
   var __uninitialized;
   var __valid;
   var __errors;
+  var __preprocess;
+  var __ir;
 
 
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Public
 
+
+
+
   window.methadone = function(raw_code) {
-    parse(clean(raw_code.toString()));
+    if (__ir && __valid) {
+      __valid = false;
+      for (var current_module in __ir) {
+        getOrCreate(__ir[current_module].name);
+      }
+    } else if (!__ir) {
+      parse(clean(raw_code.toString()));
+    }
     raw_code();
     registerInitializer();
   }
@@ -58,18 +70,21 @@
   }
 
   window.methadone.reset = function() {
-    __strict = false;
-    __valid = true;
-    __initialized = false;
+    __strict        = false;
+    __valid         = true;
+    __initialized   = false;
     __uninitialized = {};
-    __errors = [];
-    __modules = {};
-    __autoinit = true;
+    __errors        = [];
+    __modules       = {};
+    __autoinit      = true;
+    __preprocess    = true;
   }
 
   window.methadone.reset();
 
   window.methadone.errors = function() { return __errors; }
+  
+  window.methadone.setIR  = function(ir) { __ir = ir; }  
 
 
   ////////////////////////////////////////////////////////////////////////////
@@ -171,9 +186,11 @@
     var module_regex = new RegExp("[^;]\\s*(Module|Class)\\s*:", "gm");
     var strict_regex = new RegExp("[^;]\\s*Strict\\s*?:\\s*?true", "gm");
     var init_regex   = new RegExp("[^;]\\s*Init\\s*?:\\s*?false", "gm");
+    var pre_regex    = new RegExp("[^;]\\s*Preprocess\\s*?:\\s*?true", "gm");
 
     if (strict_regex.exec(code)) __strict = true;
     if (init_regex.exec(code)) __autoinit = false;
+    if (pre_regex.exec(code)) __preprocess = true;
 
     while (moduleParsed = module_regex.exec(code)) {
       var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
@@ -327,37 +344,58 @@
     var size = 0;
     var initialized = {};
 
-    while (running && __valid) {
-      for (var module_name in __modules) {
-        if (__modules.hasOwnProperty(module_name)) {
-          var current_module = __modules[module_name];
-          if (!initialized[current_module.name]) {
-            var deps_satisfied = true;
+    var order = [];
 
-            for (var import_name in current_module.imports) {
-              if (current_module.imports.hasOwnProperty(import_name)) {
-                if (!initialized[import_name]) deps_satisfied = false;
+    if (__ir) {
+      __ir = __ir.reverse();
+      while (__ir.length > 0) {
+        initializeModule(__ir.pop());
+      }
+    } else {
+      while (running && __valid) {
+        for (var module_name in __modules) {
+          if (__modules.hasOwnProperty(module_name)) {
+            var current_module = __modules[module_name];
+            if (!initialized[current_module.name]) {
+              var deps_satisfied = true;
+
+              for (var import_name in current_module.imports) {
+                if (current_module.imports.hasOwnProperty(import_name)) {
+                  if (!initialized[import_name]) deps_satisfied = false;
+                }
               }
-            }
-
-            if (deps_satisfied) {
-              initializeModule(current_module);
-              delete(__uninitialized[current_module.name]);
-              initialized[current_module.name] = true;
-              size ++;
+              if (deps_satisfied) {
+              console.log(current_module.name)
+                console.log(JSON.stringify(current_module.imports));
+                if (__preprocess) {
+                  order.push({
+                    name:   current_module.name,
+                    mixins: current_module.mixins
+                  });
+                } else {
+                  initializeModule(current_module);
+                }
+                delete(__uninitialized[current_module.name]);
+                initialized[current_module.name] = true;
+                size ++;
+              }
             }
           }
         }
+
+        if (last_size === size) {
+          var xxx = 0;
+          for (var k in __uninitialized) xxx ++;
+          if (xxx > 0) logError("Dependencies are unsatisfiable for " + JSON.stringify(keys(__uninitialized)) + "; not loaded");
+          running = false;
+        }
+
+        last_size = size;
       }
 
-      if (last_size === size) {
-        var xxx = 0;
-        for (var k in __uninitialized) xxx ++;
-        if (xxx > 0) logError("Dependencies are unsatisfiable for " + JSON.stringify(keys(__uninitialized)) + "; not loaded");
-        running = false;
+      if (__preprocess) {
+        console.log("methadone.setIR(" + JSON.stringify(order) + ")");
       }
-
-      last_size = size;
     }
   }
 
@@ -391,7 +429,7 @@
     for (var prop in obj) {
       if (obj.hasOwnProperty(prop)) {
         if (typeof obj[prop] !== "function") {
-          logError("Module " + name + " has illegal public property " + prop);
+      //    logError("Module " + name + " has illegal public property " + prop);
         }
       }
     }
