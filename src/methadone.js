@@ -77,7 +77,7 @@
     __errors        = [];
     __modules       = {};
     __autoinit      = true;
-    __preprocess    = true;
+    __preprocess    = false;
   }
 
   window.methadone.reset();
@@ -85,7 +85,6 @@
   window.methadone.errors = function() { return __errors; }
   
   window.methadone.setIR  = function(ir) { __ir = ir; }  
-
 
   ////////////////////////////////////////////////////////////////////////////
   ////
@@ -365,12 +364,11 @@
                 }
               }
               if (deps_satisfied) {
-              console.log(current_module.name)
-                console.log(JSON.stringify(current_module.imports));
                 if (__preprocess) {
                   order.push({
                     name:   current_module.name,
-                    mixins: current_module.mixins
+                    mixins: current_module.mixins,
+                    type:   current_module.type
                   });
                 } else {
                   initializeModule(current_module);
@@ -429,7 +427,7 @@
     for (var prop in obj) {
       if (obj.hasOwnProperty(prop)) {
         if (typeof obj[prop] !== "function") {
-      //    logError("Module " + name + " has illegal public property " + prop);
+          logError("Module " + name + " has illegal public property " + prop);
         }
       }
     }
