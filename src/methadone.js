@@ -45,9 +45,6 @@
   ////
   //// Public
 
-
-
-
   window.methadone = function(raw_code) {
     if (__ir && __valid) {
       __valid = false;
@@ -59,7 +56,7 @@
     }
     raw_code();
     registerInitializer();
-  }
+  };
 
   window.methadone.initialize = function() {
     if (!window.methadone.initialized) {
@@ -67,7 +64,7 @@
       registerDependencies();
       loadModules();
     }
-  }
+  };
 
   window.methadone.reset = function() {
     __strict        = false;
@@ -78,13 +75,19 @@
     __modules       = {};
     __autoinit      = true;
     __preprocess    = false;
-  }
+  };
 
   window.methadone.reset();
 
-  window.methadone.errors = function() { return __errors; }
-  
-  window.methadone.setIR  = function(ir) { __ir = ir; }  
+  window.methadone.errors = function() { return __errors; };
+
+  window.methadone.setIR  = function(ir) { __ir = ir; };
+
+  window.methadone.getIR  = function() { return __ir; };
+
+  window.methadone.getPreprocess = function() { return __preprocess; };
+
+  window.methadone.setPreprocess = function(val) { __preprocess = val; };
 
   ////////////////////////////////////////////////////////////////////////////
   ////
@@ -110,9 +113,7 @@
     // TODO we could probably juggle a few different regexes to speed this up, as long as we sync to
     // a master lastIndex
     var quote_regex = new RegExp("(\\/\\/.+?$|\\/\\*.*?\\*\\/|\\\\\"|\\\\\')|['\"]", "gm");
-    var in_comments = false;
     var in_quotes = false;
-    var escape_char = false;
     var last_quote = "";
     var quote_index = null;
     var strings = [];
@@ -185,11 +186,9 @@
     var module_regex = new RegExp("[^;]\\s*(Module|Class)\\s*:", "gm");
     var strict_regex = new RegExp("[^;]\\s*Strict\\s*?:\\s*?true", "gm");
     var init_regex   = new RegExp("[^;]\\s*Init\\s*?:\\s*?false", "gm");
-    var pre_regex    = new RegExp("[^;]\\s*Preprocess\\s*?:\\s*?true", "gm");
 
-    if (strict_regex.exec(code)) __strict = true;
-    if (init_regex.exec(code)) __autoinit = false;
-    if (pre_regex.exec(code)) __preprocess = true;
+    if (strict_regex.exec(code)) __strict  = true;
+    if (init_regex.exec(code)) __autoinit  = false;
 
     while (moduleParsed = module_regex.exec(code)) {
       var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
@@ -308,7 +307,7 @@
     return imports;
   }
 
-  /** 
+  /**
    * Assigns an instance of an Object to a namespace.
    */
   function assign(name, obj) {
@@ -334,8 +333,8 @@
 
   /**
    * Loads all modules registered so far by iterating over the module
-   * list and initializing the ones whose depenencies have been 
-   * initialized.  
+   * list and initializing the ones whose depenencies have been
+   * initialized.
    */
   function loadModules() {
     var running = true;
@@ -392,7 +391,7 @@
       }
 
       if (__preprocess) {
-        console.log("methadone.setIR(" + JSON.stringify(order) + ")");
+        __ir = "methadone.setIR(" + JSON.stringify(order) + ");";
       }
     }
   }
@@ -426,7 +425,7 @@
   function checkForProperties(obj, name) {
     for (var prop in obj) {
       if (obj.hasOwnProperty(prop)) {
-        if (typeof obj[prop] !== "function") {
+        if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
           logError("Module " + name + " has illegal public property " + prop);
         }
       }
@@ -479,8 +478,8 @@
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Initialization
-  
-  /** 
+
+  /**
    * Recursively waits for the proper moment to start the module loading process;
    * (also tripwired)
    */

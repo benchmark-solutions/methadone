@@ -7,15 +7,16 @@ Dependency Management for Javascript
 ## Overview ##
 
 Despite a cavalcade of frameworks, libraries, toolkits and other
-gizmos, Dependency management in Javascript is still a pain.  
+gizmos, dependency management in Javascript is still a pain.  
 There's always a catch -  either you need to pre-process your 
 Javascript, or your classes are loaded via XMLHttpRequest/eval 
 (yuck!), or you are required to import dependencies explicitly in 
 every class via a bizarre string based naming system (requiring 
 special IDE support).  Methadone.js aims to fix all that:
 
-- Runs directly in the browser with no pre-processing - what you see
-  in the IDE is what you get in the browser.
+- Runs directly in the browser with no code transformation or
+  compilation - what you see in the IDE is what you get in the
+  browser.
 
 - Classes and Modules provide a clean, simple API for structuring
   Object Oriented Applications in Javascript, with an intuitive
@@ -29,12 +30,17 @@ special IDE support).  Methadone.js aims to fix all that:
 
 - Modules and classes are declarative, so can be defined in any order, 
   in any methadone block, in any file.  Methadone.js handles
-  dependencies, load ordering, parent object instantiation - it even 
-  detects circular dependencies in your architecture!
+  dependencies, load ordering, parent object instantiation, detects
+  circular and invalid dependencies in your architecture!
 
 - Once all the modules and classes have been loaded, they exist as
   top-level Javascript Objects - use them just like you normally
   would, no strings attached!
+
+- Less than 6k minimized
+
+- EXPERIMENTAL - Run the dependency analysis offline & deploy your
+  application with no reflection overhead.
 
 
 
@@ -135,6 +141,7 @@ Object.
 That's it!  Methadone.js does the heavy lifting for you.
 
 
+
 ### Mixins ###
 
 Methadone.js supports mixins via the mixin function - analagous 
@@ -200,6 +207,7 @@ constructor arguments.
     });
     
 
+
 ### Strict Mode ###
 
 For all of you architecture nazis out there (you know who you are
@@ -244,21 +252,31 @@ with the Import annotation:
 
 
 
+### Initialization Record ###
 
+This feature is not fully tested and may not correctly generate an IR on all
+applications.
 
-## Release Notes ##
+If application start time is critical for your deployed application, you can
+calculate an Initialization Record for your application offline, then include
+the generated ir.js file in your application's head tag to eliminate the
+overhead associated with startup overhead - providing the same speed-up a
+compilation step would provide, while preserving 1:1 code correspondence in the
+IDE and browser.
 
-Methadone.js should be considered alpha software;  use at your own
-risk!  Though it is essentially stable in its current state, it
-suffers from a few setbacks due to it's design:
+If you would like to play with Initialization Record mode & provide feedback
+(subject to change):
 
-- Methadone.js uses regex for Javascript parsing rather than an actual
-  Javascript parser (in the interest of code size).  Because of this,
-  there is the possibility of bad parses of Methadone.js syntax.  A
-  future version will incorporate a full Javascript parser in debug mode.
+1.  Install Node.js & NPM
 
-- There is some runtime overhead when your application initially
-  loads, though small.  In the next version, we plan to add a Node.js
-  optimizing preprocessor which will convert a Methadone.js
-  application to straight Javascript when you are ready to deploy to
-  production.
+2.  Run 'npm bundle' to check out to install the dependencies
+
+3.  Run 'node node_src/preprocess.js' followed by a list of directories/files
+    you want to analyze.
+
+4.  Include the resulting script ir.js in your application's head tag,
+    immediately after methadone.js
+
+5.  Buckle your seatbelts (because a high performance sportscar is an
+    appropriate metaphor for the loadtime speedup your application will
+    experience)
