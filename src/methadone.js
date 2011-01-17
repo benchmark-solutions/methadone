@@ -39,13 +39,14 @@
   var __errors;
   var __preprocess;
   var __ir;
-
+  var __startup_time;
 
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Public
 
   window.methadone = function(raw_code) {
+    startTimer();
     if (__ir && __valid) {
       __valid = false;
       for (var current_module in __ir) {
@@ -54,16 +55,19 @@
     } else if (!__ir) {
       parse(clean(raw_code.toString()));
     }
+    stopTimer();
     raw_code();
     registerInitializer();
   };
 
   window.methadone.initialize = function() {
+    startTimer();
     if (!window.methadone.initialized) {
       __initialized = true;
-      registerDependencies();
+      if (!__ir) registerDependencies();
       loadModules();
     }
+    stopTimer();
   };
 
   window.methadone.reset = function() {
@@ -75,6 +79,7 @@
     __modules       = {};
     __autoinit      = true;
     __preprocess    = false;
+    __startup_time  = 0;
   };
 
   window.methadone.reset();
@@ -89,6 +94,8 @@
 
   window.methadone.setPreprocess = function(val) { __preprocess = val; };
 
+  window.methadone.getTime = function() { return __startup_time / 1000; };
+
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Parsing & Polishing
@@ -99,35 +106,41 @@
    * Javascript should be safe enough to identify keywords via Regex.
    */
   function clean(code) {
-    code = cleanStrings(code);
-    code = cleanComments(code);
-    code = cleanRegex(code);
-    return code;
-  }
-
-  // TODO There are some combinations of regex literals, strings & comments
-  // which @$!&*$! this parser - can be fixed by handling all 3 with
-  // the state machine. These will likely sink any attempt at a bootstrap ...
-  function cleanStrings(code) {
-
-    // TODO we could probably juggle a few different regexes to speed this up, as long as we sync to
-    // a master lastIndex
-    var quote_regex = new RegExp("(\\/\\/.+?$|\\/\\*.*?\\*\\/|\\\\\"|\\\\\')|['\"]", "gm");
+    // TODO There are some combinations of regex literals, strings & comments
+    // which @$!&*$! this parser - can be fixed by handling all 3 with
+    // the state machine. These will likely sink any attempt at a bootstrap ...
+    var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
     var in_quotes = false;
     var last_quote = "";
     var quote_index = null;
     var strings = [];
 
     while (quote = quote_regex.exec(code)) {
-      if ((quote[0] === '\\"' || quote[0] === "\\'") && in_quotes) {
-      } else if (quote[0] === last_quote) {
+      if ((quote[0] === '\\"' || quote[0] === "\\'" || quote[0] === "\\/" ) && in_quotes) {
+      } else if (quote[0] === last_quote && in_quotes) {
         last_quote = "";
         in_quotes = false;
         strings.push([quote_index, quote_regex.lastIndex]);
-      } else if (quote[0].slice(0, 2) === "//" && in_quotes) {
-        // This one needs to be rewound because it captures the whole block;  it must capture
-        // the whole block because matching on "$" would be a bad idea ....
-        quote_regex.lastIndex = quote_regex.lastIndex - quote[0].length + 2;
+      } else if (quote[0][quote[0].length - 1] === "/" && last_quote === "/") {
+        last_quote = "";
+        in_quotes = false;
+        strings.push([quote_index, quote_regex.lastIndex]);
+      } else if (quote[0] === "//" && !in_quotes) {
+        var endLine = /$/gm;
+        endLine.lastIndex = quote_regex.lastIndex;
+        endLine.exec(code);
+        strings.push([quote_regex.lastIndex, endLine.lastIndex]);
+        quote_regex.lastIndex = endLine.lastIndex;
+      } else if (quote[0] === "/*" && !in_quotes) {
+        var endComment = /\*\//gm;
+        endComment.lastIndex = quote_regex.lastIndex;
+        endComment.exec(code);
+        strings.push([quote_regex.lastIndex, endComment.lastIndex]);
+        quote_regex.lastIndex = endComment.lastIndex;
+      } else if (quote[0][quote[0].length - 1] === "/" && !in_quotes) {
+        last_quote = "/";
+        in_quotes = true;
+        quote_index = quote_regex.lastIndex;
       } else if (in_quotes) {
       } else if (quote[0] === "'" || quote[0] === '"') {
         last_quote = quote[0];
@@ -147,52 +160,20 @@
     return code;
   }
 
-  function cleanComments(code) {
-    return code.replace(/\/\/.+$/gm, "").replace(/\/\*(.|[\r\n])*?\*\//gm, "");
-  }
-
-  function cleanRegex(code) {
-    var regex_regex = new RegExp("([\\(,=^;]\\s*?/|\\/|/)", "g");
-    var in_regex = false;
-    var regexes = [];
-
-    while (regex = regex_regex.exec(code)) {
-      if (regex[0] === "\\/" && in_regex) {
-      } else if ((regex[0] === "\/" || regex[0] === "/") && in_regex) {
-        in_regex = false
-        regexes.push([regex_index, regex_regex.lastIndex]);
-      } else if ((regex[0] === "\/") || regex[0] === "/") {
-      } else {
-        in_regex = true;
-        regex_index = regex_regex.lastIndex;
-      }
-    }
-
-    regexes = regexes.reverse();
-
-    for (var i in regexes) {
-      if (regexes.hasOwnProperty(i)) {
-        code = code.slice(0, regexes[i][0] - 1) + code.slice(regexes[i][1], code.length);
-      }
-    }
-
-    return code;
-  }
-
   /**
    * Parse the contents of a methadone call to a list of module descriptor structs
    */
   function parse(code) {
-    var module_regex = new RegExp("[^;]\\s*(Module|Class)\\s*:", "gm");
-    var strict_regex = new RegExp("[^;]\\s*Strict\\s*?:\\s*?true", "gm");
-    var init_regex   = new RegExp("[^;]\\s*Init\\s*?:\\s*?false", "gm");
+    var module_regex = new RegExp("(^|;|{)\\s*(Module|Class)\\s*:", "gm");
+    var strict_regex = new RegExp("(^|;|{)\\s*Strict\\s*?:\\s*?true", "gm");
+    var init_regex   = new RegExp("(^|;|{)\\s*Init\\s*?:\\s*?false", "gm");
 
     if (strict_regex.exec(code)) __strict  = true;
     if (init_regex.exec(code)) __autoinit  = false;
 
     while (moduleParsed = module_regex.exec(code)) {
       var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
-      var module_type = moduleParsed[1];
+      var module_type = moduleParsed[2];
 
       validateModule(module_name);
       getOrCreate(module_name);
@@ -269,7 +250,7 @@
 
   function findTaggedSymbols(module, regex_) {
     var imports = {};
-    regex = new RegExp("[^;]\\s*?(" + regex_ + ")\\s*:\\s*(var\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
+    regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*(var\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
     while (regex.exec(module.code)) {
       var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
       if (__modules.hasOwnProperty(import_name[1])) {
@@ -408,7 +389,9 @@
       pending_mixins.push({});
       var __constructor = getOrCreate(current_module.name);
       processMixins(current_module, self, pending_mixins);
+      stopTimer();
       __constructor.apply(self[self.length - 1]);
+      startTimer();
       checkForProperties(self[self.length - 1], current_module.name);
       assign(current_module.name, self[self.length - 1]);
       self.pop();
@@ -450,7 +433,9 @@
       processMixins(_module, self, pending_mixins);
 
       var args = Array.prototype.slice.call(arguments);
+      stopTimer();
       _constructor.apply(self[self.length - 1], args);
+      startTimer();
       pending_mixins.pop();
       return self.pop();
     }
@@ -514,6 +499,16 @@
     console.error(message);
     __errors.push(message);
     __valid = false;
+  }
+
+  var __time__;
+
+  function startTimer() {
+    __time__ = new Date().getTime();
+  }
+
+  function stopTimer() {
+    __startup_time += (new Date().getTime()) - __time__;
   }
 
   /**

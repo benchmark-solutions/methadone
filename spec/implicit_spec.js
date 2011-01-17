@@ -9,20 +9,20 @@ describe("Strict mode", function() {
 
   it("Parses a module with 2 module dependencies in the correct order", function() {
     var errors = methtest(function() { 
-      Module: Strict.TwoDeps3 = function() {
-        this.result = function() { return Strict.TwoDeps.result() + Strict.TwoDeps2.result(); }
+      Module: Inferred.TwoDeps3 = function() {
+        this.result = function() { return Inferred.TwoDeps.result() + Inferred.TwoDeps2.result(); }
       }
 
-      Module: Strict.TwoDeps = function() {
+      Module: Inferred.TwoDeps = function() {
         this.result = function() { return "PA"; }
       }
 
-      Module: Strict.TwoDeps2 = function() {
+      Module: Inferred.TwoDeps2 = function() {
         this.result = function() { return "SS"; }
       }
     });
 
-    expect(Strict.TwoDeps3.result()).toEqual("PASS");
+    expect(Inferred.TwoDeps3.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -30,22 +30,22 @@ describe("Strict mode", function() {
 
   it("Parses a module with dependencies obscrued by bizarre roadblocks", function() {
     var errors = methtest(function() { 
-      Module: Strict.BizarreDeps3 = function() {
+      Module: Inferred.BizarreDeps3 = function() {
         this.result = function() { 
-          return  /*  //  */ Strict.BizarreDeps.result() /* // */ + Strict.BizarreDeps2.result();
+          return  /*  //  */ Inferred.BizarreDeps.result() /* // */ + Inferred.BizarreDeps2.result();
         }
       }
 
-      Module: Strict.BizarreDeps = function() {
+      Module: Inferred.BizarreDeps = function() {
         this.result = function() { return "PA"; }
       }
 
-      Module: Strict.BizarreDeps2 = function() {
+      Module: Inferred.BizarreDeps2 = function() {
         this.result = function() { return "SS"; }
       }
     });
 
-    expect(Strict.BizarreDeps3.result()).toEqual("PASS");
+    expect(Inferred.BizarreDeps3.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -53,13 +53,13 @@ describe("Strict mode", function() {
 
   it("Parses Strings without detecting dependencies", function() {
     var errors = methtest(function() { 
-      Module: Strict.ParseString = function() {
-        var temp = "; Import: Strict.FakeModule;";
+      Module: Inferred.ParseString = function() {
+        var temp = "; Import: Inferred.FakeModule;";
         this.result = function() { return "PASS"; }
       }
     });
 
-    expect(Strict.ParseString.result()).toEqual("PASS");
+    expect(Inferred.ParseString.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -67,14 +67,14 @@ describe("Strict mode", function() {
 
   it("Parses Comments without detecting dependencies", function() {
     var errors = methtest(function() { 
-      Module: Strict.ParseComment = function() {
-        //; Import: Strict.FakeModule; "
-        /* ; Import: Strict.FakeModule;' */
+      Module: Inferred.ParseComment = function() {
+        //; Import: Inferred.FakeModule; "
+        /* ; Import: Inferred.FakeModule;' */
         this.result = function() { return "PASS"; }
       }
     });
 
-    expect(Strict.ParseComment.result()).toEqual("PASS");
+    expect(Inferred.ParseComment.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -82,13 +82,13 @@ describe("Strict mode", function() {
 
   it("Parses Regexes without detecting dependencies", function() {
     var errors = methtest(function() { 
-      Module: Strict.ParseRegex = function() {
-        var temp = /;Import:Strict.FakeModule;/gm;
+      Module: Inferred.ParseRegex = function() {
+        var temp = /;Import:Inferred.FakeModule;/gm;
         this.result = function() { return "PASS"; }
       }
     });
 
-    expect(Strict.ParseRegex.result()).toEqual("PASS");
+    expect(Inferred.ParseRegex.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -96,13 +96,13 @@ describe("Strict mode", function() {
 
   it("Parses Comments in Strings without detecting dependencies", function() {
     var errors = methtest(function() { 
-      Module: Strict.ParseTrick = function() {
-        var badString = "// ; Import: Strict.FakeModule; ";
+      Module: Inferred.ParseTrick = function() {
+        var badString = "// ; Import: Inferred.FakeModule; ";
         this.result = function() { return "PASS"; }
       }
     });
 
-    expect(Strict.ParseTrick.result()).toEqual("PASS");
+    expect(Inferred.ParseTrick.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -110,13 +110,13 @@ describe("Strict mode", function() {
 
   it("Parses A Complex Grammar without detecting dependencies", function() {
     var errors = methtest(function() {
-      Module: Strict.ParseTrick2 = function() {
-        var temp = /;Import:Strict.FakeModule;/.exec("; Import: Strict.FakeModule;"); // ; Import: Strict.FakeModule ";
+      Module: Inferred.ParseTrick2 = function() {
+        var temp = /;Import:Inferred.FakeModule;/.exec("; Import: Inferred.FakeModule;"); // ; Import: Inferred.FakeModule ";
         this.result = function() { return "PASS"; }
       }
     });
 
-    expect(Strict.ParseTrick2.result()).toEqual("PASS");
+    expect(Inferred.ParseTrick2.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -126,18 +126,18 @@ describe("Strict mode", function() {
 
   it("Handles Module Mixins", function() {
     var errors = methtest(function() {
-      Module: Strict.MixinModule__ = function() {
+      Module: Inferred.MixinModule__ = function() {
         this.result = function() { return "FAIL"; }
       }
 
-      Module: Strict.MixinModule = function() {
-        Mixin: var _super = Strict.MixinModule__;
+      Module: Inferred.MixinModule = function() {
+        Mixin: var _super = Inferred.MixinModule__;
         this.result = function() { return _super.result().replace("FAIL", "PASS"); }
       }
     });
 
-    expect(Strict.MixinModule__.result()).toEqual("FAIL");
-    expect(Strict.MixinModule.result()).toEqual("PASS");
+    expect(Inferred.MixinModule__.result()).toEqual("FAIL");
+    expect(Inferred.MixinModule.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
 
@@ -145,23 +145,23 @@ describe("Strict mode", function() {
 
   it("Handles Class Mixins", function() {
     var errors = methtest(function() {
-      Class: Strict.MixinClass = function() {
+      Class: Inferred.MixinClass = function() {
         this.result = "FAIL";
       }
 
-      Module: Strict.MixinModule = function() {
-        this.result = function() { return new Strict.MixinClass2().result.replace("FAIL", "PASS"); }
+      Module: Inferred.MixinModule = function() {
+        this.result = function() { return new Inferred.MixinClass2().result.replace("FAIL", "PASS"); }
       }
 
-      Class: Strict.MixinClass2 = function() {
-        Mixin: Strict.MixinClass;
+      Class: Inferred.MixinClass2 = function() {
+        Mixin: Inferred.MixinClass;
         this.result = this.result.replace("FAIL", "PASS");
       }
     });
 
-    expect(new Strict.MixinClass().result).toEqual("FAIL");
-    expect(new Strict.MixinClass2().result).toEqual("PASS");
-    expect(Strict.MixinModule.result()).toEqual("PASS");
+    expect(new Inferred.MixinClass().result).toEqual("FAIL");
+    expect(new Inferred.MixinClass2().result).toEqual("PASS");
+    expect(Inferred.MixinModule.result()).toEqual("PASS");
     expect(errors.length).toEqual(0);
   });
   
@@ -169,12 +169,12 @@ describe("Strict mode", function() {
 
   it("Doesn't load a module with a nonexistent dependency", function() {
     var errors = methtest(function() {
-      Module: Strict.UnresolvableDependencies = function() {
-        Import: Strict.FakeModule;
+      Module: Inferred.UnresolvableDependencies = function() {
+        Import: Inferred.FakeModule;
       }
     });
 
-    expect(errors[0]).toEqual('Module Strict.UnresolvableDependencies declares an illegal Import: Strict.FakeModule');
+    expect(errors[0]).toEqual('Module Inferred.UnresolvableDependencies declares an illegal Import: Inferred.FakeModule');
     expect(errors.length).toEqual(1);
   });
 

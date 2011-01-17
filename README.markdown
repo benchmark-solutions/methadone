@@ -18,7 +18,7 @@ special IDE support).  Methadone.js aims to fix all that:
   compilation - what you see in the IDE is what you get in the
   browser.
 
-- Classes and Modules provide a clean, simple API for structuring
+- Classes and Modules define a clean, simple API for structuring
   Object Oriented Applications in Javascript, with an intuitive
   mapping to standard Javascript Objects.
 
@@ -264,12 +264,12 @@ overhead associated with startup overhead - providing the same speed-up a
 compilation step would provide, while preserving 1:1 code correspondence in the
 IDE and browser.
 
-If you would like to play with Initialization Record mode & provide feedback
-(subject to change):
+If you would like to play with Initialization Record mode & provide feedback,
+simply follow these instructions (subject to change):
 
 1.  Install Node.js & NPM
 
-2.  Run 'npm bundle' to check out to install the dependencies
+2.  Run 'npm bundle' to install the dependencies
 
 3.  Run 'node node_src/preprocess.js' followed by a list of directories/files
     you want to analyze.

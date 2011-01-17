@@ -1,39 +1,39 @@
-var jsdom  = require("jsdom").jsdom,
-    sys    = require("sys"),
+var jsdom = require("jsdom").jsdom,
+    sys = require("sys"),
     Script = process.binding('evals').Script,
-    fs     = require("fs");
+    fs = require("fs");
 
-var document    = jsdom("<html><head></head><body></body></html>"),
-    window      = document.createWindow(),
-    dirs        = process.argv.slice(2),
+var document = jsdom("<html><head></head><body></body></html>"),
+    window = document.createWindow(),
+    dirs = process.argv.slice(2),
     initialized = {};
 
 function getScripts(paths) {
-    var script = "";
-    var nextDirs = [];
-    for (var path in paths) {
-        var path = paths[path];
-        var stat = fs.statSync(path);
-        if (stat.isFile()) {
-            if (path.slice(path.length - 3, path.length + 1) === ".js" && !initialized[path]) {
-                console.log("Adding " + path);
-                initialized[path] = true;
-                script = script + fs.readFileSync(path).toString();
-            }
-        } else {
-            if (path.slice(path.length - 6, path.length + 1) !== "vendor") {
-                nextDirs.push(path);
-            }
-        }
+  var script = "";
+  var nextDirs = [];
+  for (var path in paths) {
+    var path = paths[path];
+    var stat = fs.statSync(path);
+    if (stat.isFile()) {
+      if (path.slice(path.length - 3, path.length + 1) === ".js" && !initialized[path]) {
+        console.log("Adding " + path);
+        initialized[path] = true;
+        script = script + fs.readFileSync(path).toString();
+      }
+    } else {
+      if (path.slice(path.length - 6, path.length + 1) !== "vendor") {
+        nextDirs.push(path);
+      }
     }
-    for (var dir in nextDirs) {
-        var files = fs.readdirSync(nextDirs[dir]);
-        for (var f in files) {
-            files[f] = nextDirs[dir] + '/' + files[f];
-        }
-        script = script + getScripts(files);
+  }
+  for (var dir in nextDirs) {
+    var files = fs.readdirSync(nextDirs[dir]);
+    for (var f in files) {
+      files[f] = nextDirs[dir] + '/' + files[f];
     }
-    return script;
+    script = script + getScripts(files);
+  }
+  return script;
 }
 
 var script = fs.readFileSync("src/methadone.js") + "\nmethadone.setPreprocess(true);\n";
@@ -49,12 +49,12 @@ navigator = {};
 var s = document.createElement("script");
 s.src = "../all.js"
 s.onload = function() {
-    console.log("Calculating IR");
-    window.methadone.initialize();
-    console.log("Writing ir.js");
-    fs.writeFileSync("ir.js", window.methadone.getIR());
-    fs.unlinkSync("all.js");
-    console.log("Done.  Place ir.js in your application's head immediately after methadone.js");
+  console.log("Calculating IR");
+  window.methadone.initialize();
+  console.log("Writing ir.js");
+  fs.writeFileSync("ir.js", window.methadone.getIR());
+  fs.unlinkSync("all.js");
+  console.log("Done.  Place ir.js in your application's head immediately after methadone.js");
 };
 
 console.log("Loading Application");

@@ -13,11 +13,11 @@ describe("Strict mode", function() {
         Import: Strict.TwoDeps;
         Import: Strict.TwoDeps2;
         this.result = function() { return Strict.TwoDeps.result() + Strict.TwoDeps2.result(); }
-      }
+      };
 
       Module: Strict.TwoDeps = function() {
         this.result = function() { return "PA"; }
-      }
+      };
 
       Module: Strict.TwoDeps2 = function() {
         this.result = function() { return "SS"; }
@@ -160,23 +160,23 @@ describe("Strict mode", function() {
 
 
 
-  it("Parses a module with 2 module dependencies in the correct order", function() {
-    var errors = methtest(function() { 
-      Module: Strict.TwoDeps3 = function() {
-        this.result = Strict.TwoDeps.result + Strict.TwoDeps2.result;
-      }
+  it("Parses a module with 2 undeclared module dependencies while reporting an error", function() {
+    var errors = methtest(function() {
+      Module: Strict.BadTwoDeps3 = function() {
+        this.result = Strict.BadTwoDeps.result + Strict.BadTwoDeps2.result;
+      };
 
-      Module: Strict.TwoDeps = function() {
+      Module: Strict.BadTwoDeps = function() {
         this.result = "PA";
-      }
+      };
 
-      Module: Strict.TwoDeps2 = function() {
+      Module: Strict.BadTwoDeps2 = function() {
         this.result = "SS";
-      }
+      };
     });
 
-    expect(errors[0]).toEqual('Undeclared dependency Strict.TwoDeps in Strict.TwoDeps3');
-    expect(errors[1]).toEqual('Undeclared dependency Strict.TwoDeps2 in Strict.TwoDeps3');
+    expect(errors[0]).toEqual('Undeclared dependency Strict.BadTwoDeps in Strict.BadTwoDeps3');
+    expect(errors[1]).toEqual('Undeclared dependency Strict.BadTwoDeps2 in Strict.BadTwoDeps3');
     expect(errors.length).toEqual(2);
   });
 
