@@ -1,0 +1,193 @@
+/**
+ *  Methadone.js
+ *
+ *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+methadone(function() {
+
+  Module: Methadone.Container = function() {
+
+    /**
+     * Loads all modules registered so far by iterating over the module
+     * list and initializing the ones whose depenencies have been
+     * initialized.
+     */
+    this.loadModules = function() {
+
+      var running = true;
+      var last_size = 0;
+      var size = 0;
+      var initialized = {};
+
+      var order = [];
+      if (Methadone.State.getInstance().compile) {
+        Methadone.State.getInstance().script += "Methadone.State.getInstance().m = (function() {" 
+          + this.initializeModule.toString() + "\n"
+          + this.checkForProperties.toString() + "\n"
+          + this.generateClassConstructor.toString() + "\n"
+          + Methadone.Util.extend.toString() + "\n"
+          + Methadone.Util.getOrCreate.toString() + "\n"
+          + "return {i: initializeModule, gc: getOrCreate }})();"
+      }
+
+      if (Methadone.State.getInstance().ir) {
+        Methadone.State.getInstance().ir = Methadone.State.getInstance().ir.reverse();
+        while (Methadone.State.getInstance().ir.length > 0) {
+          initializeModule(Methadone.State.getInstance().ir.pop());
+        }
+      } else {
+        while (running && Methadone.State.getInstance().valid) {
+          for (var module_name in Methadone.State.getInstance().modules) {
+            if (Methadone.State.getInstance().modules.hasOwnProperty(module_name)) {
+              var current_module = Methadone.State.getInstance().modules[module_name];
+              if (!initialized[current_module.name]) {
+                var deps_satisfied = true;
+
+                for (var import_name in current_module.imports) {
+                  if (current_module.imports.hasOwnProperty(import_name)) {
+                    if (!initialized[import_name]) deps_satisfied = false;
+                  }
+                }
+                
+                if (deps_satisfied) {
+                  if (Methadone.State.getInstance().preprocess) {
+                    order.push({
+                      name:   current_module.name,
+                      mixins: current_module.mixins,
+                      type:   current_module.type
+                    });
+                  } else if (Methadone.State.getInstance().compile) {
+                    Methadone.State.getInstance().script += "Methadone.State.getInstance().m.gc(\"" + current_module.name + "\");\n" 
+                      +  current_module.name + "=" + current_module.raw_code + ";\n"
+                      +  "Methadone.State.getInstance().m.i(" + JSON.stringify({
+                        name:   current_module.name,
+                        mixins: current_module.mixins,
+                        type:   current_module.type
+                      }) + ");\n";
+                  } else {
+                    this.initializeModule(current_module);
+                  }
+                  delete(Methadone.State.getInstance().uninitialized[current_module.name]);
+                  initialized[current_module.name] = true;
+                  size ++;
+                }
+              }
+            }
+          }
+
+          if (last_size === size) {
+            var xxx = 0;
+            for (var k in Methadone.State.getInstance().uninitialized) xxx ++;
+            if (xxx > 0) Methadone.Util.logError("Dependencies are unsatisfiable for " + JSON.stringify(Methadone.Util.keys(Methadone.State.getInstance().uninitialized)) + "; not loaded");
+            running = false;
+          }
+
+          last_size = size;
+        }
+
+        if (Methadone.State.getInstance().preprocess) {
+          Methadone.State.getInstance().ir = "methadone.setIR(" + JSON.stringify(order) + ");";
+        }
+      }
+    }
+
+    /**
+     * Instantiate the module or class.  This includes creating
+     * a fake constructor function to handle usage as a Mixin declaration.
+     */
+    this.initializeModule = function(current_module) {
+      var pending_mixins = [];
+      var self = [];
+      if (current_module.type === "Module") {
+        self.push({});
+        pending_mixins.push({});
+        var _constructor = Methadone.Util.getOrCreate(current_module.name);
+        this.processMixins(current_module, self, pending_mixins);
+        _constructor.apply(self[self.length - 1]);
+        this.checkForProperties(self[self.length - 1], current_module.name);
+        Methadone.Util.assign(current_module.name, self[self.length - 1]);
+        self.pop();
+        pending_mixins.pop();
+      } else {
+        var new_constructor = this.generateClassConstructor(current_module, Methadone.Util.getOrCreate(current_module.name), self, pending_mixins);
+        Methadone.Util.assign(current_module.name, new_constructor);
+      }
+    }
+
+    /**
+     * Modules may not have exposed properties in this version.
+     */
+    this.checkForProperties = function(obj, name) {
+      for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
+            Methadone.Util.logError("Module " + name + " has illegal public property " + prop);
+          }
+        }
+      }
+    }
+
+    /**
+     * Locally binds some vars for the scope of a constructor function;  this is where
+     * dispatch happens which switches functionality of this function between
+     * Mixin declaration and constructor.
+     */
+    this.generateClassConstructor = function(_module, _constructor, self, pending_mixins) {
+      return function() {
+        if (pending_mixins.length > 0 && pending_mixins[pending_mixins.length - 1][_module.name]) {
+          self.push(self[self.length - 1]);
+          delete(pending_mixins[pending_mixins.length - 1][_module.name]);
+        } else {
+          self.push(this);
+        }
+
+        pending_mixins.push({});
+        Methadone.Container.processMixins(_module, self, pending_mixins);
+
+        var args = Array.prototype.slice.call(arguments);
+        _constructor.apply(self[self.length - 1], args);
+        pending_mixins.pop();
+        return self.pop();
+      }
+    }
+
+    /**
+     * Instantiate and collect the classes for a mixin and attach them to the
+     * object at the top of the stack.
+     */
+    this.processMixins = function(_module, self, pending_mixins) {
+      for (var mixin_name in _module.mixins) {
+        if (_module.mixins[mixin_name] === "MODULE") {
+          Methadone.Util.extend(self[self.length - 1], Methadone.Util.getOrCreate(mixin_name));
+        } else if (_module.mixins[mixin_name] === "INSTANCE") {
+          pending_mixins[pending_mixins.length - 1][mixin_name] = true;
+        } else {
+          var obj = Methadone.Util.getOrCreate(mixin_name);
+          Methadone.Util.extend(self[self.length - 1], new obj());
+        }
+      }
+    }
+  }
+
+});

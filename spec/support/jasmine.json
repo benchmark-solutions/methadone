@@ -1,0 +1,8 @@
+{
+ "src_dir"  : "/extras/",
+ "spec_dir" : "/spec/",
+
+ "server":{
+   "port":8888
+ }
+}

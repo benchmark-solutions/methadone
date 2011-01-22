@@ -39,14 +39,14 @@
   var __errors;
   var __preprocess;
   var __ir;
-  var __startup_time;
+  var __compile;
+  var __script;
 
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Public
 
   window.methadone = function(raw_code) {
-    startTimer();
     if (__ir && __valid) {
       __valid = false;
       for (var current_module in __ir) {
@@ -55,19 +55,16 @@
     } else if (!__ir) {
       parse(clean(raw_code.toString()));
     }
-    stopTimer();
     raw_code();
     registerInitializer();
   };
 
   window.methadone.initialize = function() {
-    startTimer();
     if (!window.methadone.initialized) {
       __initialized = true;
       if (!__ir) registerDependencies();
       loadModules();
     }
-    stopTimer();
   };
 
   window.methadone.reset = function() {
@@ -80,21 +77,25 @@
     __autoinit      = true;
     __preprocess    = false;
     __startup_time  = 0;
+    __compile = false;
+    __script = "";
   };
 
   window.methadone.reset();
 
-  window.methadone.errors = function() { return __errors; };
+  window.methadone.errors        = function() { return __errors; };
 
-  window.methadone.setIR  = function(ir) { __ir = ir; };
+  window.methadone.setIR         = function(ir) { __ir = ir; };
 
-  window.methadone.getIR  = function() { return __ir; };
+  window.methadone.getIR         = function() { return __ir; };
 
   window.methadone.getPreprocess = function() { return __preprocess; };
 
   window.methadone.setPreprocess = function(val) { __preprocess = val; };
 
-  window.methadone.getTime = function() { return __startup_time / 1000; };
+  window.methadone.getScript     = function() { return __script; };
+
+  window.methadone.setCompile   = function(val) { __compile = val; };
 
   ////////////////////////////////////////////////////////////////////////////
   ////
@@ -106,9 +107,6 @@
    * Javascript should be safe enough to identify keywords via Regex.
    */
   function clean(code) {
-    // TODO There are some combinations of regex literals, strings & comments
-    // which @$!&*$! this parser - can be fixed by handling all 3 with
-    // the state machine. These will likely sink any attempt at a bootstrap ...
     var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
     var in_quotes = false;
     var last_quote = "";
@@ -194,6 +192,7 @@
   }
 
 
+
   ////////////////////////////////////////////////////////////////////////////
   ////
   //// Modules
@@ -234,7 +233,8 @@
     for (var module_name in __modules) {
       if (__modules.hasOwnProperty(module_name)) {
         var current_module = __modules[module_name];
-        current_module.code = clean(getOrCreate(module_name).toString());
+        current_module.code     = clean(getOrCreate(module_name).toString());
+        current_module.raw_code = getOrCreate(module_name).toString();
 
         var explicitModules = findTaggedSymbols(current_module, "Import");
         var mixinModules = findTaggedSymbols(current_module, "Mixin");
@@ -324,6 +324,17 @@
     var initialized = {};
 
     var order = [];
+    if (__compile) {
+      __script += "__m = (function() {" 
+        + initializeModule.toString() + "\n"
+        + checkForProperties.toString() + "\n"
+        + generateClassConstructor.toString() + "\n"
+        + extend.toString() + "\n"
+        + getOrCreate.toString() + "\n"
+        + processMixins.toString() + "\n"
+        + assign.toString() + "\n"
+        + "return {i: initializeModule, gc: getOrCreate }})();"
+    }
 
     if (__ir) {
       __ir = __ir.reverse();
@@ -337,12 +348,12 @@
             var current_module = __modules[module_name];
             if (!initialized[current_module.name]) {
               var deps_satisfied = true;
-
               for (var import_name in current_module.imports) {
                 if (current_module.imports.hasOwnProperty(import_name)) {
                   if (!initialized[import_name]) deps_satisfied = false;
                 }
               }
+              
               if (deps_satisfied) {
                 if (__preprocess) {
                   order.push({
@@ -350,6 +361,14 @@
                     mixins: current_module.mixins,
                     type:   current_module.type
                   });
+                } else if (__compile) {
+                  __script += "__m.gc(\"" + current_module.name + "\");\n" 
+                    +  current_module.name + "=" + current_module.raw_code + ";\n"
+                    +  "__m.i(" + JSON.stringify({
+                      name:   current_module.name,
+                      mixins: current_module.mixins,
+                      type:   current_module.type
+                    }) + ");\n";
                 } else {
                   initializeModule(current_module);
                 }
@@ -389,9 +408,7 @@
       pending_mixins.push({});
       var __constructor = getOrCreate(current_module.name);
       processMixins(current_module, self, pending_mixins);
-      stopTimer();
       __constructor.apply(self[self.length - 1]);
-      startTimer();
       checkForProperties(self[self.length - 1], current_module.name);
       assign(current_module.name, self[self.length - 1]);
       self.pop();
@@ -433,9 +450,7 @@
       processMixins(_module, self, pending_mixins);
 
       var args = Array.prototype.slice.call(arguments);
-      stopTimer();
       _constructor.apply(self[self.length - 1], args);
-      startTimer();
       pending_mixins.pop();
       return self.pop();
     }
@@ -499,16 +514,6 @@
     console.error(message);
     __errors.push(message);
     __valid = false;
-  }
-
-  var __time__;
-
-  function startTimer() {
-    __time__ = new Date().getTime();
-  }
-
-  function stopTimer() {
-    __startup_time += (new Date().getTime()) - __time__;
   }
 
   /**

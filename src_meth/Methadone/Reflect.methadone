@@ -1,0 +1,94 @@
+/**
+ *  Methadone.js
+ *
+ *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+methadone(function() {
+
+  Module: Methadone.Reflect = function() {
+
+    /**
+     * Finds all of the dependencies for a set of modules
+     */
+    this.registerDependencies = function() {
+      for (var module_name in Methadone.State.getInstance().modules) {
+        if (Methadone.State.getInstance().modules.hasOwnProperty(module_name)) {
+          var current_module      = Methadone.State.getInstance().modules[module_name];
+
+          current_module.code     = Methadone.Parse.clean(Methadone.Util.getOrCreate(module_name).toString());
+          current_module.raw_code = Methadone.Util.getOrCreate(module_name).toString();
+
+          var explicitModules    = this.findTaggedSymbols(current_module, "Import");
+          var mixinModules       = this.findTaggedSymbols(current_module, "Mixin");
+
+          current_module.imports = Methadone.Util.extend({}, explicitModules, mixinModules);
+          current_module.mixins  = mixinModules;
+
+          current_module.imports = Methadone.Util.extend(current_module.imports, this.findImplicitModules(module_name, current_module.code));
+        }
+      }
+    }
+
+    this.findTaggedSymbols = function(module, regex_) {
+      var imports = {};
+      regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*(var\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
+      while (regex.exec(module.code)) {
+        var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
+        if (Methadone.State.getInstance().modules.hasOwnProperty(import_name[1])) {
+          if (Methadone.State.getInstance().modules[import_name[1]].type === "Class" && module.type === "Module" && regex_ === "Mixin") {
+            Methadone.Util.logError("Module " + module.name + " cannot mixin Class " + import_name[1]);
+          } else if (import_name[2] != undefined && import_name[2] != "") {
+            imports[import_name[1]] = "INSTANCE";
+          } else if (Methadone.State.getInstance().modules[import_name[1]].type === "Module") {
+            imports[import_name[1]] = "MODULE";
+          } else {
+            imports[import_name[1]] = "STATIC";
+          }
+        } else {
+          Methadone.Util.logError("Module " + module.name + " declares an illegal " + regex_ + ": " + import_name[1]);
+        }
+      }
+      return imports;
+    }
+
+    this.findImplicitModules = function(name, code) {
+      var imports = {};
+      for (var module_name in Methadone.State.getInstance().modules) {
+        if (Methadone.State.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
+          // TODO must simulate lookbehind here to prevent capturing namespace substrings!
+          var regex = new RegExp(module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+          if (regex.exec(code)) {
+            if (!Methadone.State.getInstance().strict) {
+              imports[module_name] = true;
+            } else if (!Methadone.State.getInstance().modules[name].imports[module_name]) {
+              Methadone.Util.logError("Undeclared dependency " + module_name + " in " + name);
+            }
+          }
+        }
+      }
+      return imports;
+    }
+  }
+
+});

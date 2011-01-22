@@ -15,7 +15,7 @@ function getScripts(paths) {
     var path = paths[path];
     var stat = fs.statSync(path);
     if (stat.isFile()) {
-      if (path.slice(path.length - 3, path.length + 1) === ".js" && !initialized[path]) {
+      if (path.slice(path.length - 10, path.length + 1) === ".methadone" && !initialized[path]) {
         console.log("Adding " + path);
         initialized[path] = true;
         script = script + fs.readFileSync(path).toString();
@@ -36,9 +36,10 @@ function getScripts(paths) {
   return script;
 }
 
-var script = fs.readFileSync("src/methadone.js") + "\nmethadone.setPreprocess(true);\n";
+var script = fs.readFileSync("extras/methadone.js") + "\nmethadone.setCompile(true);\n";
 
 script = script + getScripts(dirs);
+
 fs.writeFileSync("all.js", script);
 
 // These were necessary to laod my test application;  should abstract this into an app specific harness
@@ -51,10 +52,10 @@ s.src = "../all.js"
 s.onload = function() {
   console.log("Calculating IR");
   window.methadone.initialize();
-  console.log("Writing ir.js");
-  fs.writeFileSync("ir.js", window.methadone.getIR());
+  console.log("Writing compiled.js");
+  fs.writeFileSync("compiled.js", window.methadone.getScript() + "\nmethadone=Methadone.Main.scope\nmethadone.reset=Methadone.State.reset\nmethadone.initialize=Methadone.Main.initialize\nmethadone.errors=Methadone.State.getErrors");
   fs.unlinkSync("all.js");
-  console.log("Done.  Place ir.js in your application's head immediately after methadone.js");
+  console.log("Done.");
 };
 
 console.log("Loading Application");

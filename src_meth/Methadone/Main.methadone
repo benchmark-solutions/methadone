@@ -1,0 +1,63 @@
+/**
+ *  Methadone.js
+ *
+ *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+methadone(function() {
+
+  Module: Methadone.Main = function() {
+
+    this.scope = function(raw_code) {
+      if (Methadone.State.getInstance().ir && Methadone.State.getInstance().valid) {
+        Methadone.State.getInstance().valid = false;
+        for (var current_module in Methadone.State.getInstance().ir) {
+          Methadone.Util.getOrCreate(Methadone.State.getInstance().ir[current_module].name);
+        }
+      } else if (!Methadone.State.getInstance().ir) {
+        Methadone.Parse.parse(Methadone.Parse.clean(raw_code.toString()));
+      }
+      raw_code();
+      Methadone.Init.registerInitializer(this.initialize);
+    };
+
+    this.initialize = function() {
+      if (!Methadone.State.getInstance().initialized) {
+        Methadone.State.getInstance().initialized = true;
+        if (!Methadone.State.getInstance().ir) Methadone.Reflect.registerDependencies();
+        Methadone.Container.loadModules();
+      }
+    };
+
+    Methadone.State.reset();
+
+    this.setIR         = function(ir) { Methadone.State.getInstance().ir = ir; };
+    this.getIR         = function() { return Methadone.State.getInstance().ir; };
+
+    this.setPreprocess = function(val) { Methadone.State.getInstance().preprocess = val; };
+    this.getPreprocess = function() { return Methadone.State.getInstance().preprocess; };
+
+    this.getScript     = function() { return Methadone.State.getInstance().script; };
+  };
+
+});
