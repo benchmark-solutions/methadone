@@ -27,14 +27,22 @@
 methadone(function() {
 
   Module: Methadone.State = function() {
-    var __internal;
-    this.getInstance = function() {
-      return __internal;
-    }
 
-    this.getErrors = function() {
-      return __internal.errors
-    } 
+    var __internal;
+
+    this.getInstance   = function() { return __internal; }
+
+    this.getErrors     = function() { return __internal.errors } 
+
+    this.setCompile    = function(val) { __internal.compile = val; }
+
+    this.setIR         = function(ir) { __internal.ir = ir; };
+    this.getIR         = function() { return __internal.ir; };
+
+    this.setPreprocess = function(val) { __internal.preprocess = val; };
+    this.getPreprocess = function() { return __internal.preprocess; };
+
+    this.getScript     = function() { return __internal.script; };
 
     this.reset = function() {
       __internal = new (function() {

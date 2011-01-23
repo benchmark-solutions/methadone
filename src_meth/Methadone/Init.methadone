@@ -28,6 +28,8 @@ methadone(function() {
 
   Module: Methadone.Init = function(callback) {
 
+    Import: Methadone.State;
+
     var __init__ = false;
     /**
      * Recursively waits for the proper moment to start the module loading process;

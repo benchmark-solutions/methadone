@@ -28,6 +28,9 @@ methadone(function() {
 
   Module: Methadone.Container = function() {
 
+    Import: Methadone.State;
+    Import: Methadone.Util;
+
     /**
      * Loads all modules registered so far by iterating over the module
      * list and initializing the ones whose depenencies have been
@@ -42,13 +45,19 @@ methadone(function() {
 
       var order = [];
       if (Methadone.State.getInstance().compile) {
-        Methadone.State.getInstance().script += "Methadone.State.getInstance().m = (function() {" 
-          + this.initializeModule.toString() + "\n"
-          + this.checkForProperties.toString() + "\n"
-          + this.generateClassConstructor.toString() + "\n"
-          + Methadone.Util.extend.toString() + "\n"
-          + Methadone.Util.getOrCreate.toString() + "\n"
-          + "return {i: initializeModule, gc: getOrCreate }})();"
+        Methadone.State.getInstance().script += "__m = new (function() {" 
+          + "this.initializeModule=" + this.initializeModule.toString() + "\n"
+          + "this.checkForProperties=" + this.checkForProperties.toString() + "\n"
+          + "this.generateClassConstructor=" + this.generateClassConstructor.toString() + "\n"
+          + "this.processMixins=" + this.processMixins.toString() + "\n"
+          + "var Methadone = {};Methadone.Util = {};\n"
+          + "Methadone.Util.extend=" + Methadone.Util.extend.toString() + "\n" 
+          + "this.extend = Methadone.Util.extend\n"
+          + "Methadone.Util.assign=" + Methadone.Util.assign.toString() + "\n" 
+          + "this.assign = Methadone.Util.assign\n"
+          + "Methadone.Util.getOrCreate=" + Methadone.Util.getOrCreate.toString() + "\n"
+         + "this.getOrCreate = Methadone.Util.getOrCreate"
+          + "})();"
       }
 
       if (Methadone.State.getInstance().ir) {
@@ -78,9 +87,9 @@ methadone(function() {
                       type:   current_module.type
                     });
                   } else if (Methadone.State.getInstance().compile) {
-                    Methadone.State.getInstance().script += "Methadone.State.getInstance().m.gc(\"" + current_module.name + "\");\n" 
+                    Methadone.State.getInstance().script += "__m.getOrCreate(\"" + current_module.name + "\");\n" 
                       +  current_module.name + "=" + current_module.raw_code + ";\n"
-                      +  "Methadone.State.getInstance().m.i(" + JSON.stringify({
+                      +  "__m.initializeModule(" + JSON.stringify({
                         name:   current_module.name,
                         mixins: current_module.mixins,
                         type:   current_module.type
@@ -191,3 +200,4 @@ methadone(function() {
   }
 
 });
+

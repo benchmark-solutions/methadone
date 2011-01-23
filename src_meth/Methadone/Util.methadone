@@ -28,6 +28,8 @@ methadone(function() {
 
   Module: Methadone.Util = function() {
 
+    Import: Methadone.State;
+
     this.getOrCreate = function(name) {
       var obj = window;
       name = name.split(".");
@@ -81,15 +83,15 @@ methadone(function() {
      */
     this.assign = function(name, obj) {
       var namespaces = name.split(".");
-      var ns = namespaces[0];
-      var nsparent = window;
+      var ns         = namespaces[0];
+      var nsparent   = window;
 
       if (namespaces.length > 1) {
         var temp = window[ns];
         for (var i = 1; i < namespaces.length; i ++) {
-          ns = namespaces[i];
+          ns       = namespaces[i];
           nsparent = temp;
-          temp = temp[ns];
+          temp     = temp[ns];
         }
       }
 
@@ -99,7 +101,6 @@ methadone(function() {
         nsparent[ns] = Methadone.Util.extend(obj, nsparent[ns]);
       }
     }
-
   }
 
 });

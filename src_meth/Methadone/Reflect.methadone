@@ -28,6 +28,10 @@ methadone(function() {
 
   Module: Methadone.Reflect = function() {
 
+    Import: Methadone.Parse;
+    Import: Methadone.State;
+    Import: Methadone.Util;
+
     /**
      * Finds all of the dependencies for a set of modules
      */

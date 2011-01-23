@@ -23,10 +23,20 @@
  *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 methadone(function() {
 
+  Strict: true;
+
   Module: Methadone.Main = function() {
+
+    Import: Methadone.Container;
+    Import: Methadone.Init;
+    Import: Methadone.Parse;
+    Import: Methadone.Reflect;
+    Import: Methadone.State;
+    Import: Methadone.Util;
+
+    Methadone.State.reset();
 
     this.scope = function(raw_code) {
       if (Methadone.State.getInstance().ir && Methadone.State.getInstance().valid) {
@@ -48,16 +58,6 @@ methadone(function() {
         Methadone.Container.loadModules();
       }
     };
-
-    Methadone.State.reset();
-
-    this.setIR         = function(ir) { Methadone.State.getInstance().ir = ir; };
-    this.getIR         = function() { return Methadone.State.getInstance().ir; };
-
-    this.setPreprocess = function(val) { Methadone.State.getInstance().preprocess = val; };
-    this.getPreprocess = function() { return Methadone.State.getInstance().preprocess; };
-
-    this.getScript     = function() { return Methadone.State.getInstance().script; };
   };
 
 });

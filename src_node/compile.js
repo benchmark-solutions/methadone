@@ -36,7 +36,7 @@ function getScripts(paths) {
   return script;
 }
 
-var script = fs.readFileSync("extras/methadone.js") + "\nmethadone.setCompile(true);\n";
+var script = fs.readFileSync("extras/methadone.js").toString().replace(/Methadone/g, "MMethadone") + "\nmethadone.setCompile(true);\n";
 
 script = script + getScripts(dirs);
 
@@ -50,10 +50,9 @@ navigator = {};
 var s = document.createElement("script");
 s.src = "../all.js"
 s.onload = function() {
-  console.log("Calculating IR");
   window.methadone.initialize();
-  console.log("Writing compiled.js");
-  fs.writeFileSync("compiled.js", window.methadone.getScript() + "\nmethadone=Methadone.Main.scope\nmethadone.reset=Methadone.State.reset\nmethadone.initialize=Methadone.Main.initialize\nmethadone.errors=Methadone.State.getErrors");
+  console.log("Writing methadone.js");
+  fs.writeFileSync("methadone.js", window.methadone.getScript() + "\nmethadone=Methadone.Main.scope\nMethadone.Util.extend(methadone,Methadone.Main,Methadone.State);");
   fs.unlinkSync("all.js");
   console.log("Done.");
 };

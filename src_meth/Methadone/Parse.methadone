@@ -28,6 +28,9 @@ methadone(function() {
 
   Module: Methadone.Parse = function() {
 
+    Import: Methadone.State;
+    Import: Methadone.Util;
+
     /**
      * Removes all non-syntax from Javascript text: Strings, Regex Literals &
      * Comments.  If the original Javascript was valid, then the resultant
