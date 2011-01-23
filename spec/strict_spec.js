@@ -4,7 +4,7 @@ describe("Strict mode", function() {
     methadone(function() { Init: false; Strict: true; });
     methadone(code);
     methadone.initialize();
-    return methadone.errors();
+    return methadone.getErrors();
   }
 
   it("Parses a module with 2 module dependencies in the correct order", function() {
