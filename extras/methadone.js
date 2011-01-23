@@ -305,11 +305,7 @@
       }
     }
 
-    if (typeof nsparent[ns] === "object" && keys(nsparent[ns]).length === 0) {
-      nsparent[ns] = obj;
-    } else {
-      nsparent[ns] = extend(obj, nsparent[ns]);
-    }
+    nsparent[ns] = extend(obj, nsparent[ns]);
   }
 
   /**
@@ -333,7 +329,8 @@
         + getOrCreate.toString() + "\n"
         + processMixins.toString() + "\n"
         + assign.toString() + "\n"
-        + "return {i: initializeModule, gc: getOrCreate }})();"
+            + keys.toString() + "\n"
+        + "return {i: initializeModule, gc: getOrCreate, a: assign }})();"
     }
 
     if (__ir) {
@@ -363,7 +360,7 @@
                   });
                 } else if (__compile) {
                   __script += "__m.gc(\"" + current_module.name + "\");\n" 
-                    +  current_module.name + "=" + current_module.raw_code + ";\n"
+                    +  "__m.a(\"" + current_module.name + "\", " + current_module.raw_code + ");\n"
                     +  "__m.i(" + JSON.stringify({
                       name:   current_module.name,
                       mixins: current_module.mixins,

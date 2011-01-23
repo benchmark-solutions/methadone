@@ -26,39 +26,31 @@
 
 methadone(function() {
 
-  Module: Methadone.State = function() {
+    Module: Methadone.State = function() {
 
-    var __internal;
+        Import: var internal = Methadone.State.__Internal;
 
-    this.getInstance   = function() { return __internal; }
+        var __internal;
 
-    this.getErrors     = function() { return __internal.errors } 
+        this.getInstance   = function() { return __internal; }
 
-    this.setCompile    = function(val) { __internal.compile = val; }
+        this.getErrors     = function() { return __internal.errors } 
 
-    this.setIR         = function(ir) { __internal.ir = ir; };
-    this.getIR         = function() { return __internal.ir; };
+        this.setCompile    = function(val) { __internal.compile = val; }
 
-    this.setPreprocess = function(val) { __internal.preprocess = val; };
-    this.getPreprocess = function() { return __internal.preprocess; };
+        this.setIR         = function(ir) { __internal.ir = ir; };
+        this.getIR         = function() { return __internal.ir; };
 
-    this.getScript     = function() { return __internal.script; };
+        this.setPreprocess = function(val) { __internal.preprocess = val; };
+        this.getPreprocess = function() { return __internal.preprocess; };
 
-    this.reset = function() {
-      __internal = new (function() {
-        this.strict        = false;
-        this.valid         = true;
-        this.initialized   = false;
-        this.uninitialized = {};
-        this.errors        = [];
-        this.modules       = {};
-        this.autoinit      = true;
-        this.preprocess    = false;
-        this.startup_time  = 0;
-        this.compile       = false;
-        this.script        = "";
-      });
+        this.getScript     = function() { return __internal.script; };
+
+        this.reset = function() {
+            __internal = new Methadone.State.__Internal();
+        }
+
+        this.reset();
     }
-  }
 
 });

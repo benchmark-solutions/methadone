@@ -251,6 +251,7 @@ with the Import annotation:
     });
 
 
+## Experimental/Advanced features ##
 
 ### Initialization Record ###
 
@@ -280,3 +281,23 @@ simply follow these instructions (subject to change):
 5.  Buckle your seatbelts (because a high performance sportscar is an
     appropriate metaphor for the loadtime speedup your application will
     experience)
+
+### Bootstrap ###
+
+Though it is currently larger & slower than the pure-js version, ongoing &
+future feature development will occur only on the self-hosted code,
+though the API for this version may change drastically before it
+replaces the pure-js version. If you would like to experiment with it,
+you can compile Methadone.js with the following command:
+
+    node src_node/compile.js src_meth
+    
+You can then use the resultant methadone.js to run the compilation
+again:
+
+    cp methadone.js extras/methadone.js
+    node src_node/compile.js src_meth
+
+Note that the compiler currently will not work correctly on most
+applications, as it only recognizes a restricted subset of
+Methadone.js necessary for self-hosting
