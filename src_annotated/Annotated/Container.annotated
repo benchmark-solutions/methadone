@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -24,12 +24,12 @@
  *
  */
 
-methadone(function() {
+annotated(function() {
 
-    Module: Methadone.Container = function() {
+    Module: Annotated.Container = function() {
 
-        Import: Methadone.State;
-        Import: Methadone.Util;
+        Import: Annotated.State;
+        Import: Annotated.Util;
 
         /**
          * Loads all modules registered so far by iterating over the module
@@ -44,33 +44,33 @@ methadone(function() {
             var initialized = {};
 
             var order = [];
-            if (Methadone.State.getInstance().compile) {
-                Methadone.State.getInstance().script += "__m = new (function() {" 
+            if (Annotated.State.getInstance().compile) {
+                Annotated.State.getInstance().script += "__m = new (function() {" 
                     + "this.initializeModule=" + this.initializeModule.toString() + "\n"
                     + "this.checkForProperties=" + this.checkForProperties.toString() + "\n"
                     + "this.generateClassConstructor=" + this.generateClassConstructor.toString() + "\n"
                     + "this.processMixins=" + this.processMixins.toString() + "\n"
-                    + "var Methadone = {};Methadone.Util = {};\n"
-                    + "Methadone.Util.extend=" + Methadone.Util.extend.toString() + "\n" 
-                    + "this.extend = Methadone.Util.extend\n"
-                    + "Methadone.Util.assign=" + Methadone.Util.assign.toString() + "\n" 
-                    + "this.assign = Methadone.Util.assign\n"
-                    + "Methadone.Util.keys=" + Methadone.Util.assign.toString() + "\n" 
-                    + "Methadone.Util.getOrCreate=" + Methadone.Util.getOrCreate.toString() + "\n"
-                    + "this.getOrCreate = Methadone.Util.getOrCreate"
+                    + "var Annotated = {};Annotated.Util = {};\n"
+                    + "Annotated.Util.extend=" + Annotated.Util.extend.toString() + "\n" 
+                    + "this.extend = Annotated.Util.extend\n"
+                    + "Annotated.Util.assign=" + Annotated.Util.assign.toString() + "\n" 
+                    + "this.assign = Annotated.Util.assign\n"
+                    + "Annotated.Util.keys=" + Annotated.Util.assign.toString() + "\n" 
+                    + "Annotated.Util.getOrCreate=" + Annotated.Util.getOrCreate.toString() + "\n"
+                    + "this.getOrCreate = Annotated.Util.getOrCreate"
                     + "})();"
             }
 
-            if (Methadone.State.getInstance().ir) {
-                Methadone.State.getInstance().ir = Methadone.State.getInstance().ir.reverse();
-                while (Methadone.State.getInstance().ir.length > 0) {
-                    initializeModule(Methadone.State.getInstance().ir.pop());
+            if (Annotated.State.getInstance().ir) {
+                Annotated.State.getInstance().ir = Annotated.State.getInstance().ir.reverse();
+                while (Annotated.State.getInstance().ir.length > 0) {
+                    initializeModule(Annotated.State.getInstance().ir.pop());
                 }
             } else {
-                while (running && Methadone.State.getInstance().valid) {
-                    for (var module_name in Methadone.State.getInstance().modules) {
-                        if (Methadone.State.getInstance().modules.hasOwnProperty(module_name)) {
-                            var current_module = Methadone.State.getInstance().modules[module_name];
+                while (running && Annotated.State.getInstance().valid) {
+                    for (var module_name in Annotated.State.getInstance().modules) {
+                        if (Annotated.State.getInstance().modules.hasOwnProperty(module_name)) {
+                            var current_module = Annotated.State.getInstance().modules[module_name];
                             if (!initialized[current_module.name]) {
                                 var deps_satisfied = true;
 
@@ -81,14 +81,14 @@ methadone(function() {
                                 }
                                 
                                 if (deps_satisfied) {
-                                    if (Methadone.State.getInstance().preprocess) {
+                                    if (Annotated.State.getInstance().preprocess) {
                                         order.push({
                                             name:   current_module.name,
                                             mixins: current_module.mixins,
                                             type:   current_module.type
                                         });
-                                    } else if (Methadone.State.getInstance().compile) {
-                                        Methadone.State.getInstance().script += "__m.getOrCreate(\"" + current_module.name + "\");\n" 
+                                    } else if (Annotated.State.getInstance().compile) {
+                                        Annotated.State.getInstance().script += "__m.getOrCreate(\"" + current_module.name + "\");\n" 
                                             +  "__m.assign(\"" + current_module.name + "\", " + current_module.raw_code + ");\n"
                                             +  "__m.initializeModule(" + JSON.stringify({
                                                 name:   current_module.name,
@@ -99,7 +99,7 @@ methadone(function() {
                                     } else {
                                         this.initializeModule(current_module);
                                     }
-                                    delete(Methadone.State.getInstance().uninitialized[current_module.name]);
+                                    delete(Annotated.State.getInstance().uninitialized[current_module.name]);
                                     initialized[current_module.name] = true;
                                     size ++;
                                 }
@@ -109,16 +109,16 @@ methadone(function() {
 
                     if (last_size === size) {
                         var xxx = 0;
-                        for (var k in Methadone.State.getInstance().uninitialized) xxx ++;
-                        if (xxx > 0) Methadone.Util.logError("Dependencies are unsatisfiable for " + JSON.stringify(Methadone.Util.keys(Methadone.State.getInstance().uninitialized)) + "; not loaded");
+                        for (var k in Annotated.State.getInstance().uninitialized) xxx ++;
+                        if (xxx > 0) Annotated.Util.logError("Dependencies are unsatisfiable for " + JSON.stringify(Annotated.Util.keys(Annotated.State.getInstance().uninitialized)) + "; not loaded");
                         running = false;
                     }
 
                     last_size = size;
                 }
 
-                if (Methadone.State.getInstance().preprocess) {
-                    Methadone.State.getInstance().ir = "methadone.setIR(" + JSON.stringify(order) + ");";
+                if (Annotated.State.getInstance().preprocess) {
+                    Annotated.State.getInstance().ir = "annotated.setIR(" + JSON.stringify(order) + ");";
                 }
             }
         }
@@ -133,20 +133,20 @@ methadone(function() {
             if (current_module.type === "Module") {
                 self.push({});
                 pending_mixins.push({});
-                var _constructor = Methadone.Util.getOrCreate(current_module.name);
+                var _constructor = Annotated.Util.getOrCreate(current_module.name);
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
                 this.checkForProperties(self[self.length - 1], current_module.name);
                 if (current_module.root) {
-                    Methadone.Util.assign(current_module.name, Methadone.Util.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
+                    Annotated.Util.assign(current_module.name, Annotated.Util.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
                 } else {
-                    Methadone.Util.assign(current_module.name, self[self.length - 1]);
+                    Annotated.Util.assign(current_module.name, self[self.length - 1]);
                 }
                 self.pop();
                 pending_mixins.pop();
             } else {
-                var new_constructor = this.generateClassConstructor(current_module, Methadone.Util.getOrCreate(current_module.name), self, pending_mixins);
-                Methadone.Util.assign(current_module.name, new_constructor);
+                var new_constructor = this.generateClassConstructor(current_module, Annotated.Util.getOrCreate(current_module.name), self, pending_mixins);
+                Annotated.Util.assign(current_module.name, new_constructor);
             }
         }
 
@@ -157,7 +157,7 @@ methadone(function() {
             for (var prop in obj) {
                 if (obj.hasOwnProperty(prop)) {
                     if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
-                        Methadone.Util.logError("Module " + name + " has illegal public property " + prop);
+                        Annotated.Util.logError("Module " + name + " has illegal public property " + prop);
                     }
                 }
             }
@@ -195,12 +195,12 @@ methadone(function() {
         this.processMixins = function(_module, self, pending_mixins) {
             for (var mixin_name in _module.mixins) {
                 if (_module.mixins[mixin_name] === "MODULE") {
-                    Methadone.Util.extend(self[self.length - 1], Methadone.Util.getOrCreate(mixin_name));
+                    Annotated.Util.extend(self[self.length - 1], Annotated.Util.getOrCreate(mixin_name));
                 } else if (_module.mixins[mixin_name] === "INSTANCE") {
                     pending_mixins[pending_mixins.length - 1][mixin_name] = true;
                 } else {
-                    var obj = Methadone.Util.getOrCreate(mixin_name);
-                    Methadone.Util.extend(self[self.length - 1], new obj());
+                    var obj = Annotated.Util.getOrCreate(mixin_name);
+                    Annotated.Util.extend(self[self.length - 1], new obj());
                 }
             }
         }

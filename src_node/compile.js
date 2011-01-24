@@ -15,7 +15,7 @@ function getScripts(paths) {
         var path = paths[path];
         var stat = fs.statSync(path);
         if (stat.isFile()) {
-            if (path.slice(path.length - 10, path.length + 1) === ".methadone" && !initialized[path]) {
+            if (path.slice(path.length - 10, path.length + 1) === ".annotated" && !initialized[path]) {
                 console.log("Adding " + path);
                 initialized[path] = true;
                 script = script + fs.readFileSync(path).toString();
@@ -36,7 +36,7 @@ function getScripts(paths) {
     return script;
 }
 
-var script = fs.readFileSync("methadone.js").toString().replace(/Methadone/g, "MMethadone") + "\nmethadone.setCompile(true);\n";
+var script = fs.readFileSync("annotated.js").toString().replace(/Annotated/g, "MAnnotated") + "\nannotated.setCompile(true);\n";
 
 script = script + getScripts(dirs);
 
@@ -50,11 +50,15 @@ navigator = {};
 var s = document.createElement("script"); 
 s.src = "../all.js"
 s.onload = function() {
-    window.methadone.initialize();
-    console.log("Writing methadone.js");
-    fs.writeFileSync("methadone.js", window.methadone.getScript() + "\nmethadone=Methadone;");
-    fs.unlinkSync("all.js");
-    console.log("Done.");
+    window.annotated.initialize();
+    if (window.annotated.getErrors().length > 0) {
+        console.log("Errors found, aborting");
+    } else {
+        console.log("Writing annotated.js");
+        fs.writeFileSync("annotated.js", window.annotated.getScript() + "\nannotated=Annotated;");
+        fs.unlinkSync("all.js");
+        console.log("Done.");
+    }
 };
 
 console.log("Loading Application");

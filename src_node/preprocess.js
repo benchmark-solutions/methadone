@@ -36,7 +36,7 @@ function getScripts(paths) {
   return script;
 }
 
-var script = fs.readFileSync("extras/methadone.js") + "\nmethadone.setPreprocess(true);\n";
+var script = fs.readFileSync("extras/annotated.js") + "\nannotated.setPreprocess(true);\n";
 
 script = script + getScripts(dirs);
 fs.writeFileSync("all.js", script);
@@ -50,11 +50,11 @@ var s = document.createElement("script");
 s.src = "../all.js"
 s.onload = function() {
   console.log("Calculating IR");
-  window.methadone.initialize();
+  window.annotated.initialize();
   console.log("Writing ir.js");
-  fs.writeFileSync("ir.js", window.methadone.getIR());
+  fs.writeFileSync("ir.js", window.annotated.getIR());
   fs.unlinkSync("all.js");
-  console.log("Done.  Place ir.js in your application's head immediately after methadone.js");
+  console.log("Done.  Place ir.js in your application's head immediately after annotated.js");
 };
 
 console.log("Loading Application");

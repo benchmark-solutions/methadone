@@ -1,9 +1,9 @@
 {
-  "name": "methadone",
-  "description": "Dependency Management for Javascript",
+  "name": "Annotated.js",
+  "description": "Metalanguage for Javascript",
   "version": "1.0.0",
-  "homepage": "http://benchmark-solutions.github.com/methadone",
-  "repository": "git://github.com/benchmark-solutions/methadone.git",
+  "homepage": "http://benchmark-solutions.github.com/annotated",
+  "repository": "git://github.com/benchmark-solutions/annotated.git",
   "main": "./node_src/preprocess.js",
   "directories": {
     "lib": "./node_src"

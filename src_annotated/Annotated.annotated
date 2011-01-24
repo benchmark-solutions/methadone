@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -23,51 +23,50 @@
  *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-methadone(function() {
+annotated(function() {
 
     Strict: true;
 
-    Module: Methadone = function() {
+    Module: Annotated = function() {
 
-        Mixin:  Methadone.State;
+        Mixin:  Annotated.State;
 
-        Import: Methadone.Container;
-        Import: Methadone.Init;
-        Import: Methadone.Parse;
-        Import: Methadone.Reflect;
-        Import: Methadone.Util;
+        Import: Annotated.Container;
+        Import: Annotated.Init;
+        Import: Annotated.Reflect;
+        Import: Annotated.Util;
 
         this.reset();
 
         var getState = this.getInstance
         delete(this["getInstance"]);
 
-        Root: this.scope = function(raw_code) {
+        Root: this.__scope__ = function(raw_code) {
             var cache = undefined;
             if (getState().ir && getState().valid) {
                 getState().valid = false;
                 for (var current_module in getState().ir) {
-                    Methadone.Util.getOrCreate(getState().ir[current_module].name);
+                    Annotated.Util.getOrCreate(getState().ir[current_module].name);
                 }
             } else if (!getState().ir) {
-                cache = Methadone.Util.cache(Methadone.Parse.parse(Methadone.Parse.clean(raw_code.toString())));
+                cache = Annotated.Util.cache(Annotated.Reflect.parseAnnotated(raw_code.toString()));
             }                        
             raw_code();
             if (!getState().ir) {
                 for (var arg in cache) {
                     if (cache.hasOwnProperty(arg)) {
-                        Methadone.Util.extend(Methadone.Util.getOrCreate(arg), cache[arg]);
+                        Annotated.Util.extend(Annotated.Util.getOrCreate(arg), cache[arg]);
                     }
                 }
             }
-            Methadone.Init.registerInitializer(this.initialize);
+            Annotated.Init.registerInitializer(this.initialize);
         };
 
         this.initialize = function() {
             if (!getState().initialized) {
                 getState().initialized = true;
-                if (!getState().ir) Methadone.Reflect.registerDependencies();
-                Methadone.Container.loadModules();
+                if (!getState().ir) Annotated.Reflect.parseModules();
+                Annotated.Container.loadModules();
             }
         };
     };

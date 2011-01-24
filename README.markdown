@@ -1,5 +1,5 @@
-# Methadone.js #
-Dependency Management for Javascript
+# Annotated.js #
+Metalanguage in Javscript
 
 
 
@@ -12,7 +12,7 @@ There's always a catch -  either you need to pre-process your
 Javascript, or your classes are loaded via XMLHttpRequest/eval 
 (yuck!), or you are required to import dependencies explicitly in 
 every class via a bizarre string based naming system (requiring 
-special IDE support).  Methadone.js aims to fix all that:
+special IDE support).  Annotated.js aims to fix all that:
 
 - Runs directly in the browser with no code transformation or
   compilation - what you see in the IDE is what you get in the
@@ -29,7 +29,7 @@ special IDE support).  Methadone.js aims to fix all that:
   initialize, displaying an error in the browser console.
 
 - Modules and classes are declarative, so can be defined in any order, 
-  in any methadone block, in any file.  Methadone.js handles
+  in any annotated block, in any file.  Annotated.js handles
   dependencies, load ordering, parent object instantiation, detects
   circular and invalid dependencies in your architecture!
 
@@ -39,8 +39,8 @@ special IDE support).  Methadone.js aims to fix all that:
 
 - Less than 6k minimized
 
-- EXPERIMENTAL - Run the dependency analysis offline & deploy your
-  application with no reflection overhead.
+- Run the dependency analysis offline & deploy your application with 
+  no reflection overhead.
 
 
 
@@ -48,29 +48,29 @@ special IDE support).  Methadone.js aims to fix all that:
 
 ### Modules & Classes ###
 
-In order to use Methadone.js in your Javascript project, you will need
-to ensure that it is the first script loaded on your page - Methadone
+In order to use Annotated.js in your Javascript project, you will need
+to ensure that it is the first script loaded on your page - Annotated
 will ensure that all further load order dependencies are satisfied.
 
     <head>
-        <script src="script/methadone.js"></script>
+        <script src="script/annotated.js"></script>
 
         <!-- Your application's script tags go here ... -->
 
     </head>
 
-Because Methadone.js uses code reflection to accomplish it's magic,
-Methadone.js API functions do not work like vanilla Javascript
+Because Annotated.js uses code reflection to accomplish it's magic,
+Annotated.js API functions do not work like vanilla Javascript
 functions - they must be embedded in a call to the global function 
-methadone to work.
+annotated to work.
 
-    methadone(function() {
+    annotated(function() {
 
         // Your code w/ module & class declarations go here ...
         
     });
 
-Within a methadone block, you can declare Modules and Classes (which
+Within a annotated block, you can declare Modules and Classes (which
 will execute asynchronously), as well as write standard javascript 
 (which will execute synchronously).  
 
@@ -81,7 +81,7 @@ namespaces, but act just like globally defined Javascript objects -
 the only restriction being that Modules (unlike Classes) may not
 have public properties, only functions.
 
-    methadone(function() {
+    annotated(function() {
 
         Module: Org.App.DateUtils = function() {
             this.daysOfWeek = function() { 
@@ -94,7 +94,7 @@ have public properties, only functions.
 
         // Now that we've declared our module, you can use it in any
         // other module or class the same way you would use a standard
-        // Javascript object;  Methadone.js will ensure that they are
+        // Javascript object;  Annotated.js will ensure that they are
         // instantiated in the correct order, or warn you if such an 
         // order does not exist.
 
@@ -117,7 +117,7 @@ is insantiated with the 'new' keyword, and any private members will be
 private to that instance - identically to a standard Javascript
 Object.
 
-    methadone(function() {
+    annotated(function() {
 
         Class: Org.App.MyClass = function() {
             this.counter  = 0;
@@ -138,16 +138,16 @@ Object.
 
     });
 
-That's it!  Methadone.js does the heavy lifting for you.
+That's it!  Annotated.js does the heavy lifting for you.
 
 
 
 ### Mixins ###
 
-Methadone.js supports mixins via the mixin function - analagous 
+Annotated.js supports mixins via the mixin function - analagous 
 to Ruby mixins.
 
-    methadone(function() {
+    annotated(function() {
 
         Class: Org.App.Cat = function() {
             Mixin: Org.App.Animal;
@@ -176,11 +176,11 @@ to Ruby mixins.
 
     });
 
-When you mixin a class, Methadone.js will instantiate an instance of
+When you mixin a class, Annotated.js will instantiate an instance of
 this class for you regardless of whether or not you provide
 constructor arguments.
 
-    methadone(function() {
+    annotated(function() {
 
         // With constructor args
         Class: Org.App.Cat = function() {
@@ -211,11 +211,11 @@ constructor arguments.
 ### Strict Mode ###
 
 For all of you architecture nazis out there (you know who you are
-...), Methadone.js includes a strict mode which adds additional
+...), Annotated.js includes a strict mode which adds additional
 dependency safety and required explicit dependency declaration.
-Strict mode is enabled via a Methadone.js annotation.
+Strict mode is enabled via a Annotated.js annotation.
 
-    methadone(function() {
+    annotated(function() {
 
         Strict: true;
 
@@ -223,12 +223,12 @@ Strict mode is enabled via a Methadone.js annotation.
 
     });
 
-You need only apply this annotation once, in any methadone code block;
+You need only apply this annotation once, in any annotated code block;
 once set, all modules and classes in all scripts will be treated 
 strictly.  In strict mode, dependencies must be declared explicitly 
 with the Import annotation:
 
-    methadone(function() {
+    annotated(function() {
 
         Strict: true;
 
@@ -251,54 +251,48 @@ with the Import annotation:
     });
 
 
-## Experimental/Advanced features ##
 
 ### Initialization Record ###
-
-This feature is not fully tested and may not correctly generate an IR on all
-applications.
 
 If application start time is critical for your deployed application, you can
 calculate an Initialization Record for your application offline, then include
 the generated ir.js file in your application's head tag to eliminate the
 overhead associated with startup overhead - providing the same speed-up a
 compilation step would provide, while preserving 1:1 code correspondence in the
-IDE and browser.
-
-If you would like to play with Initialization Record mode & provide feedback,
-simply follow these instructions (subject to change):
+IDE and browser.  Simply follow these instructions:
 
 1.  Install Node.js & NPM
 
-2.  Run 'npm bundle' to install the dependencies
+2.  Run 'npm install'
 
 3.  Run 'node node_src/preprocess.js' followed by a list of directories/files
     you want to analyze.
 
 4.  Include the resulting script ir.js in your application's head tag,
-    immediately after methadone.js
+    immediately after annotated.js
 
 5.  Buckle your seatbelts (because a high performance sportscar is an
     appropriate metaphor for the loadtime speedup your application will
     experience)
 
+
+
+## Development ##
+
 ### Bootstrap ###
 
-Though it is currently larger & slower than the pure-js version, ongoing &
-future feature development will occur only on the self-hosted code,
-though the API for this version may change drastically before it
-replaces the pure-js version. If you would like to experiment with it,
-you can compile Methadone.js with the following command:
+If you would like to hack on Annotated.js, you can compile the code
+yourself with node.js:
 
-    cp extras/methadone.js .
-    node src_node/compile.js src_meth
+    cp lib/annotated.js .
+    node src_node/compile.js src_annotated
     
-This will overwrite the methadone.js in yoour project root with the 
-compiled library.  You can then use the resultant methadone.js to run the 
+This will overwrite the annotated.js in yoour project root with the 
+precompiled library.  You can then use the resultant annotated.js to run the 
 compilation again:
 
-    node src_node/compile.js src_meth
+    node src_node/compile.js src_annotated
 
 Note that the compiler currently will not work correctly on most other
 applications, as it only recognizes a restricted subset of
-Methadone.js necessary for self-hosting
+Annotated.js necessary for self-hosting

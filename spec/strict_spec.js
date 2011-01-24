@@ -1,10 +1,10 @@
 describe("Strict mode", function() {
     function methtest(code) {
-        methadone.reset();
-        methadone(function() { Init: false; Strict: true; });
-        methadone(code);
-        methadone.initialize();
-        return methadone.getErrors();
+        annotated.reset();
+        annotated(function() { Init: false; Strict: true; });
+        annotated(code);
+        annotated.initialize();
+        return annotated.getErrors();
     }
 
     it("Parses a module with 2 module dependencies in the correct order", function() {

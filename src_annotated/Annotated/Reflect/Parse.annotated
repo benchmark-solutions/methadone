@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -24,12 +24,12 @@
  *
  */
 
-methadone(function() {
+annotated(function() {
 
-    Module: Methadone.Parse = function() {
+    Module: Annotated.Reflect.Parse = function() {
 
-        Import: Methadone.State;
-        Import: Methadone.Util;
+        Import: Annotated.State;
+        Import: Annotated.Util;
 
         /**
          * Removes all non-syntax from Javascript text: Strings, Regex Literals &
@@ -89,25 +89,25 @@ methadone(function() {
         }
 
         /**
-         * Parse the contents of a methadone call to a list of module descriptor structs
+         * Parse the contents of a annotated call to a list of module descriptor structs
          */
-        this.parse = function(code) {
+        this.findModules = function(code) {
             var module_regex = new RegExp("(^|;|{)\\s*(Module|Class)\\s*:", "gm");
             var strict_regex = new RegExp("(^|;|{)\\s*Strict\\s*?:\\s*?true", "gm");
             var init_regex   = new RegExp("(^|;|{)\\s*Init\\s*?:\\s*?false", "gm");
             var modules = [];
 
-            if (strict_regex.exec(code)) Methadone.State.getInstance().strict  = true;
-            if (init_regex.exec(code)) Methadone.State.getInstance().autoinit  = false;
+            if (strict_regex.exec(code)) Annotated.State.getInstance().strict  = true;
+            if (init_regex.exec(code)) Annotated.State.getInstance().autoinit  = false;
 
             while (moduleParsed = module_regex.exec(code)) {
                 var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
                 var module_type = moduleParsed[2];
 
                 this.validateModule(module_name);
-                Methadone.Util.getOrCreate(module_name);
-                Methadone.State.getInstance().uninitialized[module_name] = true;
-                Methadone.State.getInstance().modules[module_name] = {
+                Annotated.Util.getOrCreate(module_name);
+                Annotated.State.getInstance().uninitialized[module_name] = true;
+                Annotated.State.getInstance().modules[module_name] = {
                     name: module_name,
                     type: module_type
                 }
@@ -117,10 +117,64 @@ methadone(function() {
             return modules;
         }
 
+        this.findTaggedSymbols = function(module, regex_) {
+            var imports = {};
+            regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*((var)?\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
+            while (regex.exec(module.code)) {
+                var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
+                if (regex_ === "Root") {
+                    imports[import_name[1].replace("this.", "")] = "ROOT";
+                } else if (Annotated.State.getInstance().modules.hasOwnProperty(import_name[1])) {
+                    if (Annotated.State.getInstance().modules[import_name[1]].type === "Class" && module.type === "Module" && regex_ === "Mixin") {
+                        Annotated.Util.logError("Module " + module.name + " cannot mixin Class " + import_name[1]);
+                    } else if (import_name[2] != undefined && import_name[2] != "") {
+                        imports[import_name[1]] = "INSTANCE";
+                    } else if (Annotated.State.getInstance().modules[import_name[1]].type === "Module") {
+                        imports[import_name[1]] = "MODULE";
+                    } else {
+                        imports[import_name[1]] = "STATIC";
+                    }
+                } else {
+                    Annotated.Util.logError("Module " + module.name + " declares an illegal " + regex_ + ": " + import_name[1]);
+                }
+            }
+            return imports;
+        }
+
+        this.findImplicitModules = function(name, code) {
+            var imports = {};
+            for (var module_name in Annotated.State.getInstance().modules) {
+                if (Annotated.State.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
+                    // TODO must simulate lookbehind here to prevent capturing namespace substrings!
+                    var regex = new RegExp("(^|;|{|\\(|\\*|\\+|-|=|\\\\)\\s*" + module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+                    match: while (regex.exec(code)) {
+                        for (var __module_name in Annotated.State.getInstance().modules) {
+                            if (Annotated.State.getInstance().modules.hasOwnProperty(__module_name) && __module_name != module_name) {
+                                var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+                                __regex.lastIndex = regex.lastIndex - module_name.length;
+                                if (path = __regex.exec(code)) {
+                                    if ((__regex.lastIndex - regex.lastIndex) == (__module_name.length - module_name.length)) {
+                                        continue match;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!Annotated.State.getInstance().strict) {
+                            imports[module_name] = true;
+                        } else if (!Annotated.State.getInstance().modules[name].imports[module_name]) {
+                            Annotated.Util.logError("Undeclared dependency " + module_name + " in " + name);
+                        }
+                    }
+                }
+            }
+            return imports;
+        }
+
         this.validateModule = function(name) {
-            for (module in Methadone.State.getInstance().modules) {
-                if (Methadone.State.getInstance().modules.hasOwnProperty(module) && Methadone.State.getInstance().modules[module].name === name) {
-                    Methadone.Util.logError(name + " declared twice");
+            for (module in Annotated.State.getInstance().modules) {
+                if (Annotated.State.getInstance().modules.hasOwnProperty(module) && Annotated.State.getInstance().modules[module].name === name) {
+                    Annotated.Util.logError(name + " declared twice");
                 }
             }
         }

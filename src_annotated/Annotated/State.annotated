@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -24,11 +24,11 @@
  *
  */
 
-methadone(function() {
+annotated(function() {
 
-    Module: Methadone.State = function() {
+    Module: Annotated.State = function() {
 
-        Import: var internal = Methadone.State.__Internal;
+        Import: var internal = Annotated.State.__Internal;
 
         var __internal;
 
@@ -47,7 +47,7 @@ methadone(function() {
         this.getScript     = function() { return __internal.script; };
 
         this.reset = function() {
-            __internal = new Methadone.State.__Internal();
+            __internal = new Annotated.State.__Internal();
         }
 
         this.reset();

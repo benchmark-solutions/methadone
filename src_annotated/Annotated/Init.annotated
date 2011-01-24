@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -24,14 +24,15 @@
  *
  */
 
-methadone(function() {
+annotated(function() {
 
-  Module: Methadone.Init = function(callback) {
+  Module: Annotated.Init = function(callback) {
 
-    Import: Methadone.State;
+    Import: Annotated.State;
 
     var __init__ = false;
-    /**
+ 
+   /**
      * Recursively waits for the proper moment to start the module loading process;
      * (also tripwired)
      */
@@ -40,13 +41,13 @@ methadone(function() {
         __init = true;
         if (document.addEventListener) {   // For Firefox, Chrome, Safari, Opera, Camino, Netscape Navigator, Konqueror, Lynx ...
           document.addEventListener("DOMContentLoaded", function() {
-            if (Methadone.State.getInstance().autoinit) { callback(); }
+            if (Annotated.State.getInstance().autoinit) { callback(); }
           }, false);
         } else if (document.attachEvent) { // For IE (sigh) ...
           timer = function() { 
             setTimeout(function() {
               if (window.document.readyState == "complete") {
-                if (Methadone.State.getInstance().autoinit) { callback(); }
+                if (Annotated.State.getInstance().autoinit) { callback(); }
               } else {
                 timer();
               }

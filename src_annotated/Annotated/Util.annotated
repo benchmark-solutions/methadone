@@ -1,5 +1,5 @@
 /**
- *  Methadone.js
+ *  Annotated.js
  *
  *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
  *
@@ -24,11 +24,11 @@
  *
  */
 
-methadone(function() {
+annotated(function() {
 
-    Module: Methadone.Util = function() {
+    Module: Annotated.Util = function() {
 
-        Import: Methadone.State;
+        Import: Annotated.State;
 
         this.getOrCreate = function(name) {
             var obj = window;
@@ -72,8 +72,8 @@ methadone(function() {
          */
         this.logError = function(message) {
             console.error(message);
-            Methadone.State.getInstance().errors.push(message);
-            Methadone.State.getInstance().valid = false;
+            Annotated.State.getInstance().errors.push(message);
+            Annotated.State.getInstance().valid = false;
         }
 
         /**
@@ -103,7 +103,7 @@ methadone(function() {
                 }
             }
 
-            nsparent[ns] = Methadone.Util.extend(obj, nsparent[ns]);
+            nsparent[ns] = Annotated.Util.extend(obj, nsparent[ns]);
         }
     }
 
