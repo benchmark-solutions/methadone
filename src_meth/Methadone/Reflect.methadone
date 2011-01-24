@@ -82,7 +82,19 @@ methadone(function() {
                 if (Methadone.State.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
                     // TODO must simulate lookbehind here to prevent capturing namespace substrings!
                     var regex = new RegExp(module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
-                    if (regex.exec(code)) {
+                    match: while (regex.exec(code)) {
+                        for (var __module_name in Methadone.State.getInstance().modules) {
+                            if (Methadone.State.getInstance().modules.hasOwnProperty(__module_name) && __module_name != module_name) {
+                                var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+                                __regex.lastIndex = regex.lastIndex - module_name.length;
+                                if (path = __regex.exec(code)) {
+                                    if ((__regex.lastIndex - regex.lastIndex) == (__module_name.length - module_name.length)) {
+                                        continue match;
+                                    }
+                                }
+                            }
+                        }
+
                         if (!Methadone.State.getInstance().strict) {
                             imports[module_name] = true;
                         } else if (!Methadone.State.getInstance().modules[name].imports[module_name]) {

@@ -290,14 +290,15 @@ though the API for this version may change drastically before it
 replaces the pure-js version. If you would like to experiment with it,
 you can compile Methadone.js with the following command:
 
+    cp extras/methadone.js .
     node src_node/compile.js src_meth
     
-You can then use the resultant methadone.js to run the compilation
-again:
+This will overwrite the methadone.js in yoour project root with the 
+compiled library.  You can then use the resultant methadone.js to run the 
+compilation again:
 
-    cp methadone.js extras/methadone.js
     node src_node/compile.js src_meth
 
-Note that the compiler currently will not work correctly on most
+Note that the compiler currently will not work correctly on most other
 applications, as it only recognizes a restricted subset of
 Methadone.js necessary for self-hosting

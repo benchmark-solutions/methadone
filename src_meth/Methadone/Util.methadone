@@ -59,6 +59,14 @@ methadone(function() {
             return target;
         }
 
+        this.cache = function(args) {
+            var obj = {};
+            for (var i = 0; i < args.length; i ++) {
+                obj[args[i]] = this.getOrCreate(args[i]);
+            }
+            return obj;
+        }
+
         /**
          * Log an error and invalidate the application
          */

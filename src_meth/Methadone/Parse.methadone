@@ -26,100 +26,104 @@
 
 methadone(function() {
 
-  Module: Methadone.Parse = function() {
+    Module: Methadone.Parse = function() {
 
-    Import: Methadone.State;
-    Import: Methadone.Util;
+        Import: Methadone.State;
+        Import: Methadone.Util;
 
-    /**
-     * Removes all non-syntax from Javascript text: Strings, Regex Literals &
-     * Comments.  If the original Javascript was valid, then the resultant
-     * Javascript should be safe enough to identify keywords via Regex.
-     */
-    this.clean = function(code) {
-      var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
-      var in_quotes = false;
-      var last_quote = "";
-      var quote_index = null;
-      var strings = [];
+        /**
+         * Removes all non-syntax from Javascript text: Strings, Regex Literals &
+         * Comments.  If the original Javascript was valid, then the resultant
+         * Javascript should be safe enough to identify keywords via Regex.
+         */
+        this.clean = function(code) {
+            var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
+            var in_quotes = false;
+            var last_quote = "";
+            var quote_index = null;
+            var strings = [];
 
-      while (quote = quote_regex.exec(code)) {
-        if ((quote[0] === '\\"' || quote[0] === "\\'" || quote[0] === "\\/" ) && in_quotes) {
-        } else if (quote[0] === last_quote && in_quotes) {
-          last_quote = "";
-          in_quotes = false;
-          strings.push([quote_index, quote_regex.lastIndex]);
-        } else if (quote[0][quote[0].length - 1] === "/" && last_quote === "/") {
-          last_quote = "";
-          in_quotes = false;
-          strings.push([quote_index, quote_regex.lastIndex]);
-        } else if (quote[0] === "//" && !in_quotes) {
-          var endLine = /$/gm;
-          endLine.lastIndex = quote_regex.lastIndex;
-          endLine.exec(code);
-          strings.push([quote_regex.lastIndex, endLine.lastIndex]);
-          quote_regex.lastIndex = endLine.lastIndex;
-        } else if (quote[0] === "/*" && !in_quotes) {
-          var endComment = /\*\//gm;
-          endComment.lastIndex = quote_regex.lastIndex;
-          endComment.exec(code);
-          strings.push([quote_regex.lastIndex, endComment.lastIndex]);
-          quote_regex.lastIndex = endComment.lastIndex;
-        } else if (quote[0][quote[0].length - 1] === "/" && !in_quotes) {
-          last_quote = "/";
-          in_quotes = true;
-          quote_index = quote_regex.lastIndex;
-        } else if (in_quotes) {
-        } else if (quote[0] === "'" || quote[0] === '"') {
-          last_quote = quote[0];
-          in_quotes = true;
-          quote_index = quote_regex.lastIndex;
+            while (quote = quote_regex.exec(code)) {
+                if ((quote[0] === '\\"' || quote[0] === "\\'" || quote[0] === "\\/" ) && in_quotes) {
+                } else if (quote[0] === last_quote && in_quotes) {
+                    last_quote = "";
+                    in_quotes = false;
+                    strings.push([quote_index, quote_regex.lastIndex]);
+                } else if (quote[0][quote[0].length - 1] === "/" && last_quote === "/") {
+                    last_quote = "";
+                    in_quotes = false;
+                    strings.push([quote_index, quote_regex.lastIndex]);
+                } else if (quote[0] === "//" && !in_quotes) {
+                    var endLine = /$/gm;
+                    endLine.lastIndex = quote_regex.lastIndex;
+                    endLine.exec(code);
+                    strings.push([quote_regex.lastIndex, endLine.lastIndex]);
+                    quote_regex.lastIndex = endLine.lastIndex;
+                } else if (quote[0] === "/*" && !in_quotes) {
+                    var endComment = /\*\//gm;
+                    endComment.lastIndex = quote_regex.lastIndex;
+                    endComment.exec(code);
+                    strings.push([quote_regex.lastIndex, endComment.lastIndex]);
+                    quote_regex.lastIndex = endComment.lastIndex;
+                } else if (quote[0][quote[0].length - 1] === "/" && !in_quotes) {
+                    last_quote = "/";
+                    in_quotes = true;
+                    quote_index = quote_regex.lastIndex;
+                } else if (in_quotes) {
+                } else if (quote[0] === "'" || quote[0] === '"') {
+                    last_quote = quote[0];
+                    in_quotes = true;
+                    quote_index = quote_regex.lastIndex;
+                }
+            }
+
+            strings = strings.reverse();
+
+            for (var i in strings) {
+                if (strings.hasOwnProperty(i)) {
+                    code = code.slice(0, strings[i][0] - 1) + code.slice(strings[i][1], code.length);
+                }
+            }
+
+            return code;
         }
-      }
 
-      strings = strings.reverse();
+        /**
+         * Parse the contents of a methadone call to a list of module descriptor structs
+         */
+        this.parse = function(code) {
+            var module_regex = new RegExp("(^|;|{)\\s*(Module|Class)\\s*:", "gm");
+            var strict_regex = new RegExp("(^|;|{)\\s*Strict\\s*?:\\s*?true", "gm");
+            var init_regex   = new RegExp("(^|;|{)\\s*Init\\s*?:\\s*?false", "gm");
+            var modules = [];
 
-      for (var i in strings) {
-        if (strings.hasOwnProperty(i)) {
-          code = code.slice(0, strings[i][0] - 1) + code.slice(strings[i][1], code.length);
+            if (strict_regex.exec(code)) Methadone.State.getInstance().strict  = true;
+            if (init_regex.exec(code)) Methadone.State.getInstance().autoinit  = false;
+
+            while (moduleParsed = module_regex.exec(code)) {
+                var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
+                var module_type = moduleParsed[2];
+
+                this.validateModule(module_name);
+                Methadone.Util.getOrCreate(module_name);
+                Methadone.State.getInstance().uninitialized[module_name] = true;
+                Methadone.State.getInstance().modules[module_name] = {
+                    name: module_name,
+                    type: module_type
+                }
+                modules.push(module_name);
+            }
+
+            return modules;
         }
-      }
 
-      return code;
+        this.validateModule = function(name) {
+            for (module in Methadone.State.getInstance().modules) {
+                if (Methadone.State.getInstance().modules.hasOwnProperty(module) && Methadone.State.getInstance().modules[module].name === name) {
+                    Methadone.Util.logError(name + " declared twice");
+                }
+            }
+        }
     }
-
-    /**
-     * Parse the contents of a methadone call to a list of module descriptor structs
-     */
-    this.parse = function(code) {
-      var module_regex = new RegExp("(^|;|{)\\s*(Module|Class)\\s*:", "gm");
-      var strict_regex = new RegExp("(^|;|{)\\s*Strict\\s*?:\\s*?true", "gm");
-      var init_regex   = new RegExp("(^|;|{)\\s*Init\\s*?:\\s*?false", "gm");
-
-      if (strict_regex.exec(code)) Methadone.State.getInstance().strict  = true;
-      if (init_regex.exec(code)) Methadone.State.getInstance().autoinit  = false;
-
-      while (moduleParsed = module_regex.exec(code)) {
-        var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
-        var module_type = moduleParsed[2];
-
-        this.validateModule(module_name);
-        Methadone.Util.getOrCreate(module_name);
-        Methadone.State.getInstance().uninitialized[module_name] = true;
-        Methadone.State.getInstance().modules[module_name] = {
-          name: module_name,
-          type: module_type
-        }
-      }
-    }
-
-    this.validateModule = function(name) {
-      for (module in Methadone.State.getInstance().modules) {
-        if (Methadone.State.getInstance().modules.hasOwnProperty(module) && Methadone.State.getInstance().modules[module].name === name) {
-          Methadone.Util.logError(name + " declared twice");
-        }
-      }
-    }
-  }
 
 });
