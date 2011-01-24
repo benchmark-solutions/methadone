@@ -29,35 +29,11 @@ annotated(function() {
     Module: Annotated.Util = function() {
 
         Import: Annotated.State;
+        Import: Annotated.Loader;
 
-        this.getOrCreate = function(name) {
-            var obj = window;
-            name = name.split(".");
-            for (var namespace in name) {
-                if (name.hasOwnProperty(namespace)) {
-                    obj[name[namespace]] = obj[name[namespace]] || {};
-                    obj = obj[name[namespace]];
-                }
-            }
-            return obj;
-        }
-
-        this.extend = function(target) {
-            var args = Array.prototype.slice.call(arguments).slice(1);
-            for (options in args) {
-                if (args.hasOwnProperty(options)) {
-                    options = args[options];
-                    for (name in options) {
-                        copy = options[ name ];
-                        if (target !== copy && copy !== undefined) {
-                            target[ name ] = copy;
-                        }
-                    }
-                }
-            }
-
-            return target;
-        }
+        this.getOrCreate = Annotated.Loader.getOrCreate;
+        this.extend      = Annotated.Loader.extend;
+        this.assign      = Annotated.Loader.assign;
 
         this.cache = function(args) {
             var obj = {};
@@ -84,26 +60,6 @@ annotated(function() {
             var result = [];
             for (var name in o) { if (o.hasOwnProperty(name)) result.push(name); }
             return result;
-        }
-
-        /**
-         * Assigns an instance of an Object to a namespace.
-         */
-        this.assign = function(name, obj) {
-            var namespaces = name.split(".");
-            var ns         = namespaces[0];
-            var nsparent   = window;
-
-            if (namespaces.length > 1) {
-                var temp = window[ns];
-                for (var i = 1; i < namespaces.length; i ++) {
-                    ns       = namespaces[i];
-                    nsparent = temp;
-                    temp     = temp[ns];
-                }
-            }
-
-            nsparent[ns] = Annotated.Util.extend(obj, nsparent[ns]);
         }
     }
 

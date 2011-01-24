@@ -39,7 +39,7 @@ annotated(function() {
         this.reset();
 
         var getState = this.getInstance
-      //  delete(this["getInstance"]);
+        delete(this["getInstance"]);
 
         Root: this.__scope__ = function(raw_code) {
             var cache = undefined;

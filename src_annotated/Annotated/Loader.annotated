@@ -41,7 +41,6 @@ annotated(function() {
                 var _constructor = this.getOrCreate(current_module.name);
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
-                this.checkForProperties(self[self.length - 1], current_module.name);
                 if (current_module.root) {
                     this.assign(current_module.name, this.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
                 } else {
@@ -52,19 +51,6 @@ annotated(function() {
             } else {
                 var new_constructor = this.generateClassConstructor(current_module, this.getOrCreate(current_module.name), self, pending_mixins);
                 this.assign(current_module.name, new_constructor);
-            }
-        }
-
-        /**
-         * Modules may not have exposed properties in this version.
-         */
-        this.checkForProperties = function(obj, name) {
-            for (var prop in obj) {
-                if (obj.hasOwnProperty(prop)) {
-                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
-                        this.logError("Module " + name + " has illegal public property " + prop);
-                    }
-                }
             }
         }
 
@@ -133,25 +119,22 @@ annotated(function() {
         this.getOrCreate = function(name) {
             var obj = window;
             name = name.split(".");
-            for (var namespace in name) {
-                if (name.hasOwnProperty(namespace)) {
-                    obj[name[namespace]] = obj[name[namespace]] || {};
-                    obj = obj[name[namespace]];
-                }
+            for (var i = 0; i < name.length; i++) {
+                var namespace = name[i];
+                obj[namespace] = obj[namespace] || {};
+                obj = obj[namespace];
             }
             return obj;
         }
 
         this.extend = function(target) {
             var args = Array.prototype.slice.call(arguments).slice(1);
-            for (options in args) {
-                if (args.hasOwnProperty(options)) {
-                    options = args[options];
-                    for (name in options) {
-                        copy = options[ name ];
-                        if (target !== copy && copy !== undefined) {
-                            target[ name ] = copy;
-                        }
+            for (var i = 0; i < args.length; i++) {
+                var options = args[i];
+                for (name in options) {
+                    copy = options[ name ];
+                    if (target !== copy && copy !== undefined) {
+                        target[ name ] = copy;
                     }
                 }
             }
@@ -159,6 +142,16 @@ annotated(function() {
             return target;
         }
 
+        this.load = function(current_module, code) {
+            this.getOrCreate(current_module.name);
+            this.assign(current_module.name, code);
+            this.initializeModule({
+                name:   current_module.name,
+                mixins: current_module.mixins,
+                type:   current_module.type,
+                root:   current_module.root
+            }) + ");\n";;
+        }
     }
 
 });

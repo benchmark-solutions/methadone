@@ -37,8 +37,6 @@ special IDE support).  Annotated.js aims to fix all that:
   top-level Javascript Objects - use them just like you normally
   would, no strings attached!
 
-- Less than 6k minimized
-
 - Run the dependency analysis offline & deploy your application with 
   no reflection overhead.
 

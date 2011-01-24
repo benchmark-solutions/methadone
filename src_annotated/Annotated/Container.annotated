@@ -76,16 +76,16 @@ annotated(function() {
                                             type:   current_module.type
                                         });
                                     } else if (Annotated.State.getInstance().compile) {
-                                        Annotated.State.getInstance().script += "__m.getOrCreate(\"" + current_module.name + "\");\n" 
-                                            +  "__m.assign(\"" + current_module.name + "\", " + current_module.raw_code + ");\n"
-                                            +  "__m.initializeModule(" + JSON.stringify({
-                                                name:   current_module.name,
-                                                mixins: current_module.mixins,
-                                                type:   current_module.type,
-                                                root:   current_module.root
-                                            }) + ");\n";
+                                        Annotated.State.getInstance().script += "__m.load(" 
+                                            + JSON.stringify({
+                                                name:     current_module.name,
+                                                mixins:   current_module.mixins,
+                                                type:     current_module.type,
+                                                root:     current_module.root 
+                                            }) + "," + current_module.raw_code +  ");\n";
                                     } else {
                                         Annotated.Loader.initializeModule(current_module);
+                                        this.checkForProperties(Annotated.Util.getOrCreate(current_module.name), current_module.name);
                                     }
                                     delete(Annotated.State.getInstance().uninitialized[current_module.name]);
                                     initialized[current_module.name] = true;
@@ -107,6 +107,19 @@ annotated(function() {
 
                 if (Annotated.State.getInstance().preprocess) {
                     Annotated.State.getInstance().ir = "annotated.setIR(" + JSON.stringify(order) + ");";
+                }
+            }
+        }
+
+        /**
+         * Modules may not have exposed properties in this version.
+         */
+        this.checkForProperties = function(obj, name) {
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
+                        this.logError("Module " + name + " has illegal public property " + prop);
+                    }
                 }
             }
         }
