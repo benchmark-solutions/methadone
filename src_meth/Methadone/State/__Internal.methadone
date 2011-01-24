@@ -35,7 +35,6 @@ methadone(function() {
         this.modules       = {};
         this.autoinit      = true;
         this.preprocess    = false;
-        this.startup_time  = 0;
         this.compile       = false;
         this.script        = "";
     };

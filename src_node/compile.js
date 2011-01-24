@@ -23,7 +23,7 @@ function getScripts(paths) {
         } else {
             if (path.slice(path.length - 6, path.length + 1) !== "vendor") {
                 nextDirs.push(path);
-            }
+            } 
         }
     }
     for (var dir in nextDirs) {
@@ -47,12 +47,12 @@ window.WebSocket = {};
 window.location.search = "";
 navigator = {};
 
-var s = document.createElement("script");
+var s = document.createElement("script"); 
 s.src = "../all.js"
 s.onload = function() {
     window.methadone.initialize();
     console.log("Writing methadone.js");
-    fs.writeFileSync("methadone.js", window.methadone.getScript() + "\nmethadone=Methadone.scope\nMethadone.Util.extend(methadone,Methadone);");
+    fs.writeFileSync("methadone.js", window.methadone.getScript() + "\nmethadone=Methadone;");
     fs.unlinkSync("all.js");
     console.log("Done.");
 };

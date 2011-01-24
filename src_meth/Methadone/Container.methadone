@@ -93,7 +93,8 @@ methadone(function() {
                                             +  "__m.initializeModule(" + JSON.stringify({
                                                 name:   current_module.name,
                                                 mixins: current_module.mixins,
-                                                type:   current_module.type
+                                                type:   current_module.type,
+                                                root:   current_module.root
                                             }) + ");\n";
                                     } else {
                                         this.initializeModule(current_module);
@@ -136,7 +137,11 @@ methadone(function() {
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
                 this.checkForProperties(self[self.length - 1], current_module.name);
-                Methadone.Util.assign(current_module.name, self[self.length - 1]);
+                if (current_module.root) {
+                    Methadone.Util.assign(current_module.name, Methadone.Util.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
+                } else {
+                    Methadone.Util.assign(current_module.name, self[self.length - 1]);
+                }
                 self.pop();
                 pending_mixins.pop();
             } else {

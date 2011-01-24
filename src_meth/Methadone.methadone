@@ -29,7 +29,7 @@ methadone(function() {
 
     Module: Methadone = function() {
 
-        Mixin: Methadone.State;
+        Mixin:  Methadone.State;
 
         Import: Methadone.Container;
         Import: Methadone.Init;
@@ -42,7 +42,7 @@ methadone(function() {
         var getState = this.getInstance
         delete(this["getInstance"]);
 
-        this.scope = function(raw_code) {
+        Root: this.scope = function(raw_code) {
             var cache = undefined;
             if (getState().ir && getState().valid) {
                 getState().valid = false;

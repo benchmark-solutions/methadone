@@ -8,7 +8,11 @@ __m = new (function() {this.initializeModule=function (current_module) {
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
                 this.checkForProperties(self[self.length - 1], current_module.name);
-                MMethadone.Util.assign(current_module.name, self[self.length - 1]);
+                if (current_module.root) {
+                    MMethadone.Util.assign(current_module.name, MMethadone.Util.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
+                } else {
+                    MMethadone.Util.assign(current_module.name, self[self.length - 1]);
+                }
                 self.pop();
                 pending_mixins.pop();
             } else {
@@ -128,7 +132,6 @@ __m.assign("Methadone.State.__Internal", function () {
         this.modules       = {};
         this.autoinit      = true;
         this.preprocess    = false;
-        this.startup_time  = 0;
         this.compile       = false;
         this.script        = "";
     });
@@ -311,7 +314,8 @@ __m.assign("Methadone.Container", function () {
                                             +  "__m.initializeModule(" + JSON.stringify({
                                                 name:   current_module.name,
                                                 mixins: current_module.mixins,
-                                                type:   current_module.type
+                                                type:   current_module.type,
+                                                root:   current_module.root
                                             }) + ");\n";
                                     } else {
                                         this.initializeModule(current_module);
@@ -354,7 +358,11 @@ __m.assign("Methadone.Container", function () {
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
                 this.checkForProperties(self[self.length - 1], current_module.name);
-                Methadone.Util.assign(current_module.name, self[self.length - 1]);
+                if (current_module.root) {
+                    Methadone.Util.assign(current_module.name, Methadone.Util.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
+                } else {
+                    Methadone.Util.assign(current_module.name, self[self.length - 1]);
+                }
                 self.pop();
                 pending_mixins.pop();
             } else {
@@ -573,9 +581,11 @@ __m.assign("Methadone.Reflect", function () {
 
                     var explicitModules    = this.findTaggedSymbols(current_module, "Import");
                     var mixinModules       = this.findTaggedSymbols(current_module, "Mixin");
-
+                    var root               = this.findTaggedSymbols(current_module, "Root");
+                
                     current_module.imports = Methadone.Util.extend({}, explicitModules, mixinModules);
                     current_module.mixins  = mixinModules;
+                    current_module.root    = Methadone.Util.keys(root)[0];
 
                     current_module.imports = Methadone.Util.extend(current_module.imports, this.findImplicitModules(module_name, current_module.code));
                 }
@@ -584,10 +594,12 @@ __m.assign("Methadone.Reflect", function () {
 
         this.findTaggedSymbols = function(module, regex_) {
             var imports = {};
-            regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*(var\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
+            regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*((var)?\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
             while (regex.exec(module.code)) {
                 var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
-                if (Methadone.State.getInstance().modules.hasOwnProperty(import_name[1])) {
+                if (regex_ === "Root") {
+                    imports[import_name[1].replace("this.", "")] = "ROOT";
+                } else if (Methadone.State.getInstance().modules.hasOwnProperty(import_name[1])) {
                     if (Methadone.State.getInstance().modules[import_name[1]].type === "Class" && module.type === "Module" && regex_ === "Mixin") {
                         Methadone.Util.logError("Module " + module.name + " cannot mixin Class " + import_name[1]);
                     } else if (import_name[2] != undefined && import_name[2] != "") {
@@ -638,7 +650,7 @@ __m.initializeModule({"name":"Methadone.Reflect","mixins":{},"type":"Module"});
 __m.getOrCreate("Methadone");
 __m.assign("Methadone", function () {
 
-        Mixin: Methadone.State;
+        Mixin:  Methadone.State;
 
         Import: Methadone.Container;
         Import: Methadone.Init;
@@ -651,7 +663,7 @@ __m.assign("Methadone", function () {
         var getState = this.getInstance
         delete(this["getInstance"]);
 
-        this.scope = function(raw_code) {
+        Root: this.scope = function(raw_code) {
             var cache = undefined;
             if (getState().ir && getState().valid) {
                 getState().valid = false;
@@ -680,7 +692,6 @@ __m.assign("Methadone", function () {
             }
         };
     });
-__m.initializeModule({"name":"Methadone","mixins":{"Methadone.State":"MODULE"},"type":"Module"});
+__m.initializeModule({"name":"Methadone","mixins":{"Methadone.State":"MODULE"},"type":"Module","root":"scope"});
 
-methadone=Methadone.scope
-Methadone.Util.extend(methadone,Methadone);
+methadone=Methadone;
