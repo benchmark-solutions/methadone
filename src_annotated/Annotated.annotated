@@ -31,42 +31,42 @@ annotated(function() {
 
         Mixin:  Annotated.State;
 
-        Import: Annotated.Container;
-        Import: Annotated.Init;
-        Import: Annotated.Reflect;
-        Import: Annotated.Util;
+        Import: var C = Annotated.Container;
+        Import: var I = Annotated.Init;
+        Import: var R = Annotated.Reflect;
+        Import: var U = Annotated.Util;
 
         this.reset();
 
         var getState = this.getInstance
-        delete(this["getInstance"]);
+      //  delete(this["getInstance"]);
 
         Root: this.__scope__ = function(raw_code) {
             var cache = undefined;
             if (getState().ir && getState().valid) {
                 getState().valid = false;
-                for (var current_module in getState().ir) {
-                    Annotated.Util.getOrCreate(getState().ir[current_module].name);
+                for (var i = 0; i < getState().ir.length; i ++) {
+                    U.getOrCreate(getState().ir[i].name);
                 }
             } else if (!getState().ir) {
-                cache = Annotated.Util.cache(Annotated.Reflect.parseAnnotated(raw_code.toString()));
+                cache = U.cache(R.parseAnnotated(raw_code.toString()));
             }                        
             raw_code();
             if (!getState().ir) {
                 for (var arg in cache) {
                     if (cache.hasOwnProperty(arg)) {
-                        Annotated.Util.extend(Annotated.Util.getOrCreate(arg), cache[arg]);
+                        U.extend(U.getOrCreate(arg), cache[arg]);
                     }
                 }
             }
-            Annotated.Init.registerInitializer(this.initialize);
+            I.registerInitializer(this.initialize);
         };
 
         this.initialize = function() {
             if (!getState().initialized) {
                 getState().initialized = true;
-                if (!getState().ir) Annotated.Reflect.parseModules();
-                Annotated.Container.loadModules();
+                if (!getState().ir) R.parseModules();
+                C.loadModules();
             }
         };
     };

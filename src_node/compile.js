@@ -36,13 +36,13 @@ function getScripts(paths) {
     return script;
 }
 
-var script = fs.readFileSync("annotated.js").toString().replace(/Annotated/g, "MAnnotated") + "\nannotated.setCompile(true);\n";
+var script = fs.readFileSync("annotated.js").toString().replace(/Annotated/g, "__Annotated__") + "\nannotated.setCompile(true);\n";
 
 script = script + getScripts(dirs);
 
 fs.writeFileSync("all.js", script);
 
-// These were necessary to laod my test application;  should abstract this into an app specific harness
+// These were necessary to load my test application;  should abstract this into an app specific harness
 window.WebSocket = {};
 window.location.search = "";
 navigator = {};

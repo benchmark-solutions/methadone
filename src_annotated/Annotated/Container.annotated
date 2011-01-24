@@ -45,20 +45,7 @@ annotated(function() {
 
             var order = [];
             if (Annotated.State.getInstance().compile) {
-                Annotated.State.getInstance().script += "__m = new (function() {" 
-                    + "this.initializeModule=" + this.initializeModule.toString() + "\n"
-                    + "this.checkForProperties=" + this.checkForProperties.toString() + "\n"
-                    + "this.generateClassConstructor=" + this.generateClassConstructor.toString() + "\n"
-                    + "this.processMixins=" + this.processMixins.toString() + "\n"
-                    + "var Annotated = {};Annotated.Util = {};\n"
-                    + "Annotated.Util.extend=" + Annotated.Util.extend.toString() + "\n" 
-                    + "this.extend = Annotated.Util.extend\n"
-                    + "Annotated.Util.assign=" + Annotated.Util.assign.toString() + "\n" 
-                    + "this.assign = Annotated.Util.assign\n"
-                    + "Annotated.Util.keys=" + Annotated.Util.assign.toString() + "\n" 
-                    + "Annotated.Util.getOrCreate=" + Annotated.Util.getOrCreate.toString() + "\n"
-                    + "this.getOrCreate = Annotated.Util.getOrCreate"
-                    + "})();"
+                Annotated.State.getInstance().script += Annotated.Reflect.render("__m", "Annotated.Util", "Annotated.Container");
             }
 
             if (Annotated.State.getInstance().ir) {
@@ -187,6 +174,10 @@ annotated(function() {
                 return self.pop();
             }
         }
+
+        this.getOrCreate = Annotated.Util.getOrCreate;
+
+        this.assign = Annotated.Util.assign;
 
         /**
          * Instantiate and collect the classes for a mixin and attach them to the

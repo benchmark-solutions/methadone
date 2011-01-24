@@ -63,6 +63,33 @@ annotated(function() {
             code = Annotated.Reflect.Parse.clean(code);
             return Annotated.Reflect.Parse.findModules(code);
         }
+
+        var render = function(args) {
+            var script = "";
+            for (var i = 0; i < args.length; i ++) {
+                var module_name = args[i];
+                script += module_name.replace(".", "__") + "=new (function() {";
+                module_instance = Annotated.Util.getOrCreate(module_name);
+                for (var j in module_instance) {
+                    if (module_instance.hasOwnProperty(j)) {
+                        script += "this." + j + "=" + module_instance[j].toString() + ";";
+                    }
+                }
+                script += "})();\n";
+            }
+            return script;
+        }
+
+        this.render = function(name) {
+            var args = Array.prototype.slice.call(arguments);
+            var script = name + "=(function(){" 
+                + render(args.slice(1)) + ";return " 
+                + args[args.length - 1] + "})();";
+            for (i = 1; i < args.length; i ++) {
+                script = script.replace(new RegExp(args[i], "gm"), args[i].replace(".", "__"));
+            }
+            return script;
+        }
     }
 
 });

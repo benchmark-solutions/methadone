@@ -287,7 +287,7 @@ yourself with node.js:
     cp lib/annotated.js .
     node src_node/compile.js src_annotated
     
-This will overwrite the annotated.js in yoour project root with the 
+This will overwrite the annotated.js in your project root with the 
 precompiled library.  You can then use the resultant annotated.js to run the 
 compilation again:
 
