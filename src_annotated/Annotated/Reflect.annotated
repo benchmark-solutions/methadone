@@ -28,30 +28,30 @@ annotated(function() {
 
     Module: Annotated.Reflect = function() {
 
-        Import: Annotated.Reflect.Parse;
-        Import: Annotated.State;
-        Import: Annotated.Util;
+        Import: var P = Annotated.Reflect.Parse;
+        Import: var S = Annotated.State;
+        Import: var U = Annotated.Util;
 
         /**
          * Finds all of the dependencies for a set of modules
          */
         this.parseModules = function() {
-            for (var module_name in Annotated.State.getInstance().modules) {
-                if (Annotated.State.getInstance().modules.hasOwnProperty(module_name)) {
-                    var current_module      = Annotated.State.getInstance().modules[module_name];
+            for (var module_name in S.getInstance().modules) {
+                if (S.getInstance().modules.hasOwnProperty(module_name)) {
+                    var current_module      = S.getInstance().modules[module_name];
 
-                    current_module.code     = Annotated.Reflect.Parse.clean(Annotated.Util.getOrCreate(module_name).toString());
-                    current_module.raw_code = Annotated.Util.getOrCreate(module_name).toString();
+                    current_module.code     = P.clean(U.getOrCreate(module_name).toString());
+                    current_module.raw_code = U.getOrCreate(module_name).toString();
 
-                    var explicitModules     = Annotated.Reflect.Parse.findTaggedSymbols(current_module, "Import");
-                    var mixinModules        = Annotated.Reflect.Parse.findTaggedSymbols(current_module, "Mixin");
-                    var root                = Annotated.Reflect.Parse.findTaggedSymbols(current_module, "Root");
+                    var explicitModules     = P.findTaggedSymbols(current_module, "Import");
+                    var mixinModules        = P.findTaggedSymbols(current_module, "Mixin");
+                    var root                = P.findTaggedSymbols(current_module, "Root");
                                             
-                    current_module.imports  = Annotated.Util.extend({}, explicitModules, mixinModules);
+                    current_module.imports  = U.extend({}, explicitModules, mixinModules);
                     current_module.mixins   = mixinModules;
-                    current_module.root     = Annotated.Util.keys(root)[0];
+                    current_module.root     = U.keys(root)[0];
                                             
-                    current_module.imports  = Annotated.Util.extend(current_module.imports, Annotated.Reflect.Parse.findImplicitModules(module_name, current_module.code));
+                    current_module.imports  = U.extend(current_module.imports, P.findImplicitModules(module_name, current_module.code));
                 }
             }
         }
@@ -60,8 +60,7 @@ annotated(function() {
          * Parse the contents of an annotated call to a list of module descriptor structs
          */
         this.parseAnnotated = function(code) {
-            code = Annotated.Reflect.Parse.clean(code);
-            return Annotated.Reflect.Parse.findModules(code);
+            return P.findModules(P.clean(code));
         }
 
         var render = function(args) {
@@ -69,7 +68,7 @@ annotated(function() {
             for (var i = 0; i < args.length; i ++) {
                 var module_name = args[i];
                 script += module_name.replace(".", "__") + "=new (function() {";
-                module_instance = Annotated.Util.getOrCreate(module_name);
+                module_instance = U.getOrCreate(module_name);
                 for (var j in module_instance) {
                     if (module_instance.hasOwnProperty(j)) {
                         script += "this." + j + "=" + module_instance[j].toString() + ";";

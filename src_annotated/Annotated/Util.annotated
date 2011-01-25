@@ -28,12 +28,12 @@ annotated(function() {
 
     Module: Annotated.Util = function() {
 
-        Import: Annotated.State;
-        Import: Annotated.Loader;
+        Import: var S = Annotated.State;
+        Import: var L = Annotated.Loader;
 
-        this.getOrCreate = Annotated.Loader.getOrCreate;
-        this.extend      = Annotated.Loader.extend;
-        this.assign      = Annotated.Loader.assign;
+        this.getOrCreate = L.getOrCreate;
+        this.extend      = L.extend;
+        this.assign      = L.assign;
 
         this.cache = function(args) {
             var obj = {};
@@ -48,8 +48,8 @@ annotated(function() {
          */
         this.logError = function(message) {
             console.error(message);
-            Annotated.State.getInstance().errors.push(message);
-            Annotated.State.getInstance().valid = false;
+            S.getInstance().errors.push(message);
+            S.getInstance().valid = false;
         }
 
         /**

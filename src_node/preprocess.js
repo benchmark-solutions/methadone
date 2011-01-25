@@ -36,7 +36,7 @@ function getScripts(paths) {
     return script;
 }
 
-var script = fs.readFileSync("extras/annotated.js") + "\nannotated.setPreprocess(true);\n";
+var script = fs.readFileSync("lib/annotated.js") + "\nannotated.setPreprocess(true);\n";
 
 script = script + getScripts(dirs);
 fs.writeFileSync("all.js", script);

@@ -28,7 +28,7 @@ annotated(function() {
 
     Module: Annotated.State = function() {
 
-        Import: var internal = Annotated.State.__Internal;
+        Import:  Annotated.State.__Internal;
 
         var __internal;
 

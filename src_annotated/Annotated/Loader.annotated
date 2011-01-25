@@ -26,6 +26,10 @@
 
 annotated(function() {
 
+    /**
+     * This is a special class as it is designed to be serialized for compilation.
+     * It shouldn't have dependencies, and should generall be as small as possible 
+     */
     Module: Annotated.Loader = function() {
 
         /**
@@ -145,12 +149,7 @@ annotated(function() {
         this.load = function(current_module, code) {
             this.getOrCreate(current_module.name);
             this.assign(current_module.name, code);
-            this.initializeModule({
-                name:   current_module.name,
-                mixins: current_module.mixins,
-                type:   current_module.type,
-                root:   current_module.root
-            }) + ");\n";;
+            this.initializeModule(current_module) + ");\n";;
         }
     }
 

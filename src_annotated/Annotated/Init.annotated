@@ -28,7 +28,7 @@ annotated(function() {
 
   Module: Annotated.Init = function(callback) {
 
-    Import: Annotated.State;
+    Import: var S = Annotated.State;
 
     var __init__ = false;
  
@@ -41,13 +41,13 @@ annotated(function() {
         __init = true;
         if (document.addEventListener) {   // For Firefox, Chrome, Safari, Opera, Camino, Netscape Navigator, Konqueror, Lynx ...
           document.addEventListener("DOMContentLoaded", function() {
-            if (Annotated.State.getInstance().autoinit) { callback(); }
+            if (S.getInstance().autoinit) { callback(); }
           }, false);
         } else if (document.attachEvent) { // For IE (sigh) ...
           timer = function() { 
             setTimeout(function() {
               if (window.document.readyState == "complete") {
-                if (Annotated.State.getInstance().autoinit) { callback(); }
+                if (S.getInstance().autoinit) { callback(); }
               } else {
                 timer();
               }

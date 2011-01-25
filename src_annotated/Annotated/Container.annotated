@@ -28,9 +28,9 @@ annotated(function() {
 
     Module: Annotated.Container = function() {
 
-        Import: Annotated.State;
-        Import: Annotated.Util;
-        Import: Annotated.Loader;
+        Import: var S = Annotated.State;
+        Import: var U = Annotated.Util;
+        Import: var L = Annotated.Loader;
 
         /**
          * Loads all modules registered so far by iterating over the module
@@ -45,20 +45,20 @@ annotated(function() {
             var initialized = {};
 
             var order = [];
-            if (Annotated.State.getInstance().compile) {
-                Annotated.State.getInstance().script += Annotated.Reflect.render("__m", "Annotated.Loader");
+            if (S.getInstance().compile) {
+                S.getInstance().script += Annotated.Reflect.render("__m", "Annotated.Loader");
             }
 
-            if (Annotated.State.getInstance().ir) {
-                Annotated.State.getInstance().ir = Annotated.State.getInstance().ir.reverse();
-                while (Annotated.State.getInstance().ir.length > 0) {
-                    Annotated.Loader.initializeModule(Annotated.State.getInstance().ir.pop());
+            if (S.getInstance().ir) {
+                S.getInstance().ir = S.getInstance().ir.reverse();
+                while (S.getInstance().ir.length > 0) {
+                    L.initializeModule(S.getInstance().ir.pop());
                 }
             } else {
-                while (running && Annotated.State.getInstance().valid) {
-                    for (var module_name in Annotated.State.getInstance().modules) {
-                        if (Annotated.State.getInstance().modules.hasOwnProperty(module_name)) {
-                            var current_module = Annotated.State.getInstance().modules[module_name];
+                while (running && S.getInstance().valid) {
+                    for (var module_name in S.getInstance().modules) {
+                        if (S.getInstance().modules.hasOwnProperty(module_name)) {
+                            var current_module = S.getInstance().modules[module_name];
                             if (!initialized[current_module.name]) {
                                 var deps_satisfied = true;
 
@@ -69,25 +69,21 @@ annotated(function() {
                                 }
                                 
                                 if (deps_satisfied) {
-                                    if (Annotated.State.getInstance().preprocess) {
-                                        order.push({
-                                            name:   current_module.name,
-                                            mixins: current_module.mixins,
-                                            type:   current_module.type
-                                        });
-                                    } else if (Annotated.State.getInstance().compile) {
-                                        Annotated.State.getInstance().script += "__m.load(" 
-                                            + JSON.stringify({
-                                                name:     current_module.name,
-                                                mixins:   current_module.mixins,
-                                                type:     current_module.type,
-                                                root:     current_module.root 
-                                            }) + "," + current_module.raw_code +  ");\n";
+                                    var code = current_module.raw_code;
+                                    delete(current_module["code"]);
+                                    delete(current_module["imports"]);
+                                    delete(current_module["raw_code"]);
+                                  
+                                    if (S.getInstance().preprocess) {
+                                        order.push(current_module);
+                                    } else if (S.getInstance().compile) {
+                                        S.getInstance().script += "__m.load(" + JSON.stringify(current_module) + "," +code +  ");\n";
                                     } else {
-                                        Annotated.Loader.initializeModule(current_module);
-                                        this.checkForProperties(Annotated.Util.getOrCreate(current_module.name), current_module.name);
+                                        L.initializeModule(current_module);
+                                        this.checkForProperties(U.getOrCreate(current_module.name), current_module.name); // TODO should move to Loader
                                     }
-                                    delete(Annotated.State.getInstance().uninitialized[current_module.name]);
+                                    
+                                    delete(S.getInstance().uninitialized[current_module.name]);
                                     initialized[current_module.name] = true;
                                     size ++;
                                 }
@@ -97,16 +93,16 @@ annotated(function() {
 
                     if (last_size === size) {
                         var xxx = 0;
-                        for (var k in Annotated.State.getInstance().uninitialized) xxx ++;
-                        if (xxx > 0) Annotated.Util.logError("Dependencies are unsatisfiable for " + JSON.stringify(Annotated.Util.keys(Annotated.State.getInstance().uninitialized)) + "; not loaded");
+                        for (var k in S.getInstance().uninitialized) xxx ++;
+                        if (xxx > 0) U.logError("Dependencies are unsatisfiable for " + JSON.stringify(U.keys(S.getInstance().uninitialized)) + "; not loaded");
                         running = false;
                     }
 
                     last_size = size;
                 }
 
-                if (Annotated.State.getInstance().preprocess) {
-                    Annotated.State.getInstance().ir = "annotated.setIR(" + JSON.stringify(order) + ");";
+                if (S.getInstance().preprocess) {
+                    S.getInstance().ir = "annotated.setIR(" + JSON.stringify(order) + ");";
                 }
             }
         }
@@ -117,7 +113,7 @@ annotated(function() {
         this.checkForProperties = function(obj, name) {
             for (var prop in obj) {
                 if (obj.hasOwnProperty(prop)) {
-                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") {
+                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") { // TODO add Object here?
                         this.logError("Module " + name + " has illegal public property " + prop);
                     }
                 }
