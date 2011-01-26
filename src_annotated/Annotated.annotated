@@ -39,9 +39,10 @@ annotated(function() {
         this.reset();
 
         var getState = this.getInstance
-        delete(this["getInstance"]);
+		var self = this;	
 
         Root: this.__scope__ = function(raw_code) {
+			raw_code :String;
             var cache = undefined;
             if (getState().ir && getState().valid) {
                 getState().valid = false;
@@ -59,7 +60,7 @@ annotated(function() {
                     }
                 }
             }
-            I.registerInitializer(this.initialize);
+            I.registerInitializer(self.initialize);
         };
 
         this.initialize = function() {

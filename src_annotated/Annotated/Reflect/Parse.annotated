@@ -31,70 +31,38 @@ annotated(function() {
         Import: var S = Annotated.State;
         Import: var U = Annotated.Util;
 
+        var identifier       = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)";
+        var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*"
+        var statementStart   = "(^|;|{)";
+        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/)"
+        var __whiteSpace__   = "\\s*?";
+        var noIdentifier     = "(?![a-zA-Z0-9_\\$])";
+
         /**
          * Removes all non-syntax from Javascript text: Strings, Regex Literals &
          * Comments.  If the original Javascript was valid, then the resultant
          * Javascript should be safe enough to identify keywords via Regex.
          */
-        this.clean = function(code) {
-            var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
-            var in_quotes = false;
-            var last_quote = "";
-            var quote_index = null;
-            var strings = [];
+        this.clean = Annotated.Loader.clean;
 
-            while (quote = quote_regex.exec(code)) {
-                if ((quote[0] === '\\"' || quote[0] === "\\'" || quote[0] === "\\/" ) && in_quotes) {
-                } else if (quote[0] === last_quote && in_quotes) {
-                    last_quote = "";
-                    in_quotes = false;
-                    strings.push([quote_index, quote_regex.lastIndex]);
-                } else if (quote[0][quote[0].length - 1] === "/" && last_quote === "/") {
-                    last_quote = "";
-                    in_quotes = false;
-                    strings.push([quote_index, quote_regex.lastIndex]);
-                } else if (quote[0] === "//" && !in_quotes) {
-                    var endLine = /$/gm;
-                    endLine.lastIndex = quote_regex.lastIndex;
-                    endLine.exec(code);
-                    strings.push([quote_regex.lastIndex, endLine.lastIndex]);
-                    quote_regex.lastIndex = endLine.lastIndex;
-                } else if (quote[0] === "/*" && !in_quotes) {
-                    var endComment = /\*\//gm;
-                    endComment.lastIndex = quote_regex.lastIndex;
-                    endComment.exec(code);
-                    strings.push([quote_regex.lastIndex, endComment.lastIndex]);
-                    quote_regex.lastIndex = endComment.lastIndex;
-                } else if (quote[0][quote[0].length - 1] === "/" && !in_quotes) {
-                    last_quote = "/";
-                    in_quotes = true;
-                    quote_index = quote_regex.lastIndex;
-                } else if (in_quotes) {
-                } else if (quote[0] === "'" || quote[0] === '"') {
-                    last_quote = quote[0];
-                    in_quotes = true;
-                    quote_index = quote_regex.lastIndex;
-                }
-            }
+        this.findParams = function(module) { return Annotated.Loader.findParams(module.code); };
 
-            strings = strings.reverse();
+		Const: var reserved = {
+			"Import" : true,
+			"Mixin" : true
+		}
 
-            for (var i in strings) {
-                if (strings.hasOwnProperty(i)) {
-                    code = code.slice(0, strings[i][0] - 1) + code.slice(strings[i][1], code.length);
-                }
-            }
-
-            return code;
-        }
+        this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
 
         /**
          * Parse the contents of a annotated call to a list of module descriptor structs
          */
         this.findModules = function(code) {
-            var module_regex = new RegExp("(^|;|{)\\s*(Module|Class)\\s*:", "gm");
-            var strict_regex = new RegExp("(^|;|{)\\s*Strict\\s*?:\\s*?true", "gm");
-            var init_regex   = new RegExp("(^|;|{)\\s*Init\\s*?:\\s*?false", "gm");
+			code :String;
+
+            var module_regex = new RegExp(statementStart + __whiteSpace__ + "(Module|Class)" + __whiteSpace__ + ":", "gm");
+            var strict_regex = new RegExp(statementStart + __whiteSpace__ + "Strict" + __whiteSpace__ + ":" + __whiteSpace__ + "true", "gm");
+            var init_regex   = new RegExp(statementStart + __whiteSpace__ + "Init" + __whiteSpace__ + ":" + __whiteSpace__ + "false", "gm");
             var modules = [];
 
             if (strict_regex.exec(code)) S.getInstance().strict  = true;
@@ -118,8 +86,16 @@ annotated(function() {
         }
 
         this.findTaggedSymbols = function(module, regex_) {
+			module :Object;
+			regex_ :String;
+
             var imports = {};
-            regex = new RegExp("(^|;|{)\\s*(" + regex_ + ")\\s*:\\s*((var)?\\s+[a-zA-Z0-9_\\$]+\\s*=\\s*)?", "gm");
+
+            regex = new RegExp(statementStart + __whiteSpace__ 
+				+ "(" + regex_ + ")" + __whiteSpace__ 
+				+ ":\\s*((var\\s+)?" + identifier + __whiteSpace__ 
+				+ "=" + __whiteSpace__ + ")?", "gm");
+				
             while (regex.exec(module.code)) {
                 var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
                 if (regex_ === "Root") {
@@ -142,15 +118,18 @@ annotated(function() {
         }
 
         this.findImplicitModules = function(name, code) {
+			name :String;
+			code :String;
+			
             var imports = {};
             for (var module_name in S.getInstance().modules) {
                 if (S.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
                     // TODO must simulate lookbehind here to prevent capturing namespace substrings!
-                    var regex = new RegExp("(^|;|{|\\(|\\*|\\+|-|=|\\\\)\\s*" + module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+                    var regex = new RegExp(parameterStart + __whiteSpace__ + module_name.replace(".", "\\.").replace("$", "\\$") + noIdentifier, "gm");
                     match: while (regex.exec(code)) {
                         for (var __module_name in S.getInstance().modules) {
                             if (S.getInstance().modules.hasOwnProperty(__module_name) && __module_name != module_name) {
-                                var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + "(?![a-zA-Z0-9_\\$])", "gm");
+                                var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + noIdentifier, "gm");
                                 __regex.lastIndex = regex.lastIndex - module_name.length;
                                 if (path = __regex.exec(code)) {
                                     if ((__regex.lastIndex - regex.lastIndex) == (__module_name.length - module_name.length)) {
@@ -172,6 +151,8 @@ annotated(function() {
         }
 
         this.validateModule = function(name) {
+			name :String;
+			
             for (module in S.getInstance().modules) {
                 if (S.getInstance().modules.hasOwnProperty(module) && S.getInstance().modules[module].name === name) {
                     U.logError(name + " declared twice");

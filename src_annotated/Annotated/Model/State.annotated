@@ -26,7 +26,8 @@
 
 annotated(function() {
 
-    Class: Annotated.State.__Internal = function() {
+    Class: Annotated.Model.State = function() {
+	
         this.strict        = false;
         this.valid         = true;
         this.initialized   = false;

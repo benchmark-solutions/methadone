@@ -26,37 +26,38 @@
 
 annotated(function() {
 
-  Module: Annotated.Init = function(callback) {
+    Module: Annotated.Init = function() {
 
-    Import: var S = Annotated.State;
+        Import: var S = Annotated.State;
 
-    var __init__ = false;
- 
-   /**
-     * Recursively waits for the proper moment to start the module loading process;
-     * (also tripwired)
-     */
-    this.registerInitializer = function() {
-      if (!__init__) {
-        __init = true;
-        if (document.addEventListener) {   // For Firefox, Chrome, Safari, Opera, Camino, Netscape Navigator, Konqueror, Lynx ...
-          document.addEventListener("DOMContentLoaded", function() {
-            if (S.getInstance().autoinit) { callback(); }
-          }, false);
-        } else if (document.attachEvent) { // For IE (sigh) ...
-          timer = function() { 
-            setTimeout(function() {
-              if (window.document.readyState == "complete") {
-                if (S.getInstance().autoinit) { callback(); }
-              } else {
-                timer();
-              }
-            }, 500); 
-          };
-          timer();
+        var __init__ = false;
+        
+        /**
+         * Recursively waits for the proper moment to start the module loading process;
+         * (also tripwired)
+         */
+        this.registerInitializer = function(callback) {
+			callback :Function;
+		    if (!__init__) {
+                __init = true;
+                if (document.addEventListener) {   // For Firefox, Chrome, Safari, Opera, Camino, Netscape Navigator, Konqueror, Lynx ...
+                    document.addEventListener("DOMContentLoaded", function() {
+                        if (S.getInstance().autoinit) { callback(); }
+                    }, false);
+                } else if (document.attachEvent) { // For IE (sigh) ...
+                    timer = function() { 
+                        setTimeout(function() {
+                            if (window.document.readyState == "complete") {
+                                if (S.getInstance().autoinit) { callback(); }
+                            } else {
+                                timer();
+                            }
+                        }, 500); 
+                    };
+                    timer();
+                }
+            }
         }
-      }
     }
-  }
 
 });

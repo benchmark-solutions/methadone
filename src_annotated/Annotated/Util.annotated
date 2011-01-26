@@ -47,6 +47,7 @@ annotated(function() {
          * Log an error and invalidate the application
          */
         this.logError = function(message) {
+			message :String;
             console.error(message);
             S.getInstance().errors.push(message);
             S.getInstance().valid = false;
@@ -57,6 +58,7 @@ annotated(function() {
          * @param o
          */
         this.keys = function(o) {
+			o :Object;
             var result = [];
             for (var name in o) { if (o.hasOwnProperty(name)) result.push(name); }
             return result;

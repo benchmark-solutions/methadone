@@ -37,6 +37,8 @@ annotated(function() {
          * a fake constructor function to handle usage as a Mixin declaration.
          */
         this.initializeModule = function(current_module) {
+			current_module :Object;
+			
             var pending_mixins = [];
             var self = [];
             if (current_module.type === "Module") {
@@ -45,11 +47,13 @@ annotated(function() {
                 var _constructor = this.getOrCreate(current_module.name);
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
+                this.checkForProperties(current_module);
                 if (current_module.root) {
                     this.assign(current_module.name, this.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
                 } else {
                     this.assign(current_module.name, self[self.length - 1]);
                 }
+				this.addRestrictions(self[self.length - 1], current_module);
                 self.pop();
                 pending_mixins.pop();
             } else {
@@ -64,7 +68,12 @@ annotated(function() {
          * Mixin declaration and constructor.
          */
         this.generateClassConstructor = function(_module, _constructor, self, pending_mixins) {
-            var __this = this;
+			_module        :Object;
+			_constructor   :Function;
+			self           :Array;
+			pending_mixins :Array;
+           
+ 			var __this = this;
             return function() {
                 if (pending_mixins.length > 0 && pending_mixins[pending_mixins.length - 1][_module.name]) {
                     self.push(self[self.length - 1]);
@@ -77,7 +86,12 @@ annotated(function() {
                 __this.processMixins(_module, self, pending_mixins);
 
                 var args = Array.prototype.slice.call(arguments);
+				__this.checkRestrictions(_module, args);
+
                 _constructor.apply(self[self.length - 1], args);
+                __this.checkForProperties(_module);
+			    __this.addRestrictions(self[self.length - 1], _module);
+
                 pending_mixins.pop();
                 return self.pop();
             }
@@ -88,6 +102,10 @@ annotated(function() {
          * object at the top of the stack.
          */
         this.processMixins = function(_module, self, pending_mixins) {
+			_module        :Object;
+			self           :Array;
+			pending_mixins :Array;
+
             for (var mixin_name in _module.mixins) {
                 if (_module.mixins[mixin_name] === "MODULE") {
                     this.extend(self[self.length - 1], this.getOrCreate(mixin_name));
@@ -104,6 +122,8 @@ annotated(function() {
          * Assigns an instance of an Object to a namespace.
          */
         this.assign = function(name, obj) {
+			name :String;
+			
             var namespaces = name.split(".");
             var ns         = namespaces[0];
             var nsparent   = window;
@@ -120,7 +140,178 @@ annotated(function() {
             nsparent[ns] = this.extend(obj, nsparent[ns]);
         }
 
+        /**
+         * Modules may not have exposed properties in this version.
+         */
+        this.checkForProperties = function(module) {
+			module :Object;
+			var obj = this.getOrCreate(module.name);	
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined" && typeof obj[prop] !== "object") {
+                        throw new Error("Module " + module.name + " has illegal public property " + prop);
+                    }
+                }
+            }
+        }
+
+       this.checkRestrictions = function(module, args) {
+			module :Object;
+			args   :Array;
+			
+			var obj = this.getOrCreate(module.name);	
+			var argNum = 0;
+			for (var prop in module.restrictions) {
+                if (module.restrictions.hasOwnProperty(prop)) {
+					if (module.restrictions[prop] !== "None" && typeof args[argNum] !== module.restrictions[prop]) {
+						throw Error("Module " + module.name + " type error; " 
+							+ prop + "::" + module.restrictions[prop] + " invoked with " + args[argNum] + "::" + (typeof args[argNum]));
+					}
+                }
+            }
+        }
+
+		this.addRestrictions = function(obj, module) {
+			obj    :Object;
+			module :Object;
+			
+			for (var prop in obj) {
+				if (obj.hasOwnProperty(prop)) {
+					if (typeof obj[prop] === "function") {
+						var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
+						var old_fn = obj[prop];
+						obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
+					}
+				}
+			}
+		}
+		
+		this.typeFn = function(restrictions, prop, obj, old) {
+			restrictions :Object;
+			prop         :String;
+			obj          :Object;
+			old          :Function;
+		
+			var x = function() {
+    		    var args = Array.prototype.slice.call(arguments);
+				var argNum = 0;
+				for (var rest in restrictions) {
+					if (restrictions[rest] === "array") {
+						if (!(args[argNum] instanceof Array)) {
+							throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
+						}
+					} else if ((args[argNum] instanceof Array) && restrictions[rest] !== "None") {
+						throw Error("Type Error; " + args[argNum] + "(Array) is not a " + restrictions[rest] + " in method " + prop);
+					} else if (restrictions[rest] !== "None" && typeof args[argNum] !== restrictions[rest]) {
+						throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
+					}
+					argNum ++;
+				}
+				return old.apply(obj, args);
+			}
+			x.toString = function() { return old.toString() };
+			return x;
+		}
+
+        this.findParams = function(code) {
+			code :String;
+            var params = new RegExp("\\((.*?)\\)", "gm").exec(code)[1].split(",");
+            for (var i = 0; i < params.length; i ++) {
+                params[i] = params[i].trim();
+                if (params[i] === "") return [];
+            }
+            return params;
+        }
+
+        this.findRestrictions = function(code) {
+	        code :String;
+			var reserved = {
+				"Import" : true,
+				"Mixin" : true
+			}
+            params = this.findParams(code);
+            var code = code.split("{")[1].split(/(;)/gm) // TODO $ makes firefox fail - weird;
+			var restrictions  = {};
+			var isRestriction = true;
+			for (var param in params) {
+            	restrictions[params[param]] = "None";
+			}
+			for (var i = 0; (i < code.length) && isRestriction; i += 2) {
+                isRestriction = false;
+                var line = code[i].split(":");
+                for (var param in params) {
+	                if (line[0].trim() != "") {
+                        if (params[param] === line[0].trim()) {
+                            restrictions[line[0].trim()] = line[1].replace(";", "").toLowerCase().trim(); 
+							isRestriction = true;
+						} else if (reserved[line[0].trim()]) {
+							isRestriction  = true;
+						}
+                   	} else {
+						isRestriction = true;
+					}
+                }
+            }
+			return restrictions;
+        }
+
+        this.clean = function(code) {
+			code :String;
+			
+            var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
+            var in_quotes = false;
+            var last_quote = "";
+            var quote_index = null;
+            var strings = [];
+
+            while (quote = quote_regex.exec(code)) {
+                if ((quote[0] === '\\"' || quote[0] === "\\'" || quote[0] === "\\/" ) && in_quotes) {
+                } else if (quote[0] === last_quote && in_quotes) {
+                    last_quote = "";
+                    in_quotes = false;
+                    strings.push([quote_index, quote_regex.lastIndex]);
+                } else if (quote[0][quote[0].length - 1] === "/" && last_quote === "/") {
+                    last_quote = "";
+                    in_quotes = false;
+                    strings.push([quote_index, quote_regex.lastIndex]);
+                } else if (quote[0] === "//" && !in_quotes) {
+                    var endLine = /$/gm;
+                    endLine.lastIndex = quote_regex.lastIndex;
+                    endLine.exec(code);
+                    strings.push([quote_regex.lastIndex - 1, endLine.lastIndex]);
+                    quote_regex.lastIndex = endLine.lastIndex;
+                } else if (quote[0] === "/*" && !in_quotes) {
+                    var endComment = /\*\//gm;
+                    endComment.lastIndex = quote_regex.lastIndex;
+                    endComment.exec(code);
+                    strings.push([quote_regex.lastIndex, endComment.lastIndex]);
+                    quote_regex.lastIndex = endComment.lastIndex;
+                } else if (quote[0][quote[0].length - 1] === "/" && !in_quotes) {
+                    last_quote = "/";
+                    in_quotes = true;
+                    quote_index = quote_regex.lastIndex;
+                } else if (in_quotes) {
+                } else if (quote[0] === "'" || quote[0] === '"') {
+                    last_quote = quote[0];
+                    in_quotes = true;
+                    quote_index = quote_regex.lastIndex;
+                }
+            }
+
+            strings = strings.reverse();
+
+            for (var i in strings) {
+                if (strings.hasOwnProperty(i)) {
+                    code = code.slice(0, strings[i][0] - 1) + code.slice(strings[i][1], code.length);
+                }
+            }
+
+            return code;
+        }
+
         this.getOrCreate = function(name) {
+			name :String;
+		
             var obj = window;
             name = name.split(".");
             for (var i = 0; i < name.length; i++) {
@@ -147,7 +338,11 @@ annotated(function() {
         }
 
         this.load = function(current_module, code) {
-            this.getOrCreate(current_module.name);
+			current_module :Object;
+			code           :String;
+			
+			window["Boolean"] = {};
+			this.getOrCreate(current_module.name);
             this.assign(current_module.name, code);
             this.initializeModule(current_module) + ");\n";;
         }

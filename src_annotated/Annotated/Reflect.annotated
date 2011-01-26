@@ -33,12 +33,14 @@ annotated(function() {
         Import: var U = Annotated.Util;
 
         /**
-         * Finds all of the dependencies for a set of modules
+         * Finds all of the dependencies for a set of modules - runs after all
+         * modules' metadata has been parsed.
          */
         this.parseModules = function() {
-            for (var module_name in S.getInstance().modules) {
-                if (S.getInstance().modules.hasOwnProperty(module_name)) {
-                    var current_module      = S.getInstance().modules[module_name];
+            var modules = S.getInstance().modules;
+            for (var module_name in modules) {
+                if (modules.hasOwnProperty(module_name)) {
+                    var current_module      = modules[module_name];
 
                     current_module.code     = P.clean(U.getOrCreate(module_name).toString());
                     current_module.raw_code = U.getOrCreate(module_name).toString();
@@ -52,21 +54,31 @@ annotated(function() {
                     current_module.root     = U.keys(root)[0];
                                             
                     current_module.imports  = U.extend(current_module.imports, P.findImplicitModules(module_name, current_module.code));
+
+      				current_module.restrictions = P.findRestrictions(current_module);
                 }
             }
         }
 
         /**
-         * Parse the contents of an annotated call to a list of module descriptor structs
+         * Parse the contents of an annotated call to a list of module descriptor structs.
+         * This function runs before all modules have been declared
          */
         this.parseAnnotated = function(code) {
-            return P.findModules(P.clean(code));
+			code :String;
+            
+			return P.findModules(P.clean(code));
         }
 
-        var render = function(args) {
+        this.render = function(name) {
+			name :String;
+			
+            var args   = Array.prototype.slice.call(arguments);
+            var others = args.slice(1)
             var script = "";
-            for (var i = 0; i < args.length; i ++) {
-                var module_name = args[i];
+
+            for (var i = 0; i < others.length; i ++) {
+                var module_name = others[i];
                 script += module_name.replace(".", "__") + "=new (function() {";
                 module_instance = U.getOrCreate(module_name);
                 for (var j in module_instance) {
@@ -76,14 +88,8 @@ annotated(function() {
                 }
                 script += "})();\n";
             }
-            return script;
-        }
 
-        this.render = function(name) {
-            var args = Array.prototype.slice.call(arguments);
-            var script = name + "=(function(){" 
-                + render(args.slice(1)) + ";return " 
-                + args[args.length - 1] + "})();";
+            script = name + "=(function(){" + script + ";return " + args[args.length - 1] + "})();";
             for (i = 1; i < args.length; i ++) {
                 script = script.replace(new RegExp(args[i], "gm"), args[i].replace(".", "__"));
             }

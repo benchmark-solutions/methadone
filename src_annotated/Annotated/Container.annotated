@@ -80,7 +80,6 @@ annotated(function() {
                                         S.getInstance().script += "__m.load(" + JSON.stringify(current_module) + "," +code +  ");\n";
                                     } else {
                                         L.initializeModule(current_module);
-                                        this.checkForProperties(U.getOrCreate(current_module.name), current_module.name); // TODO should move to Loader
                                     }
                                     
                                     delete(S.getInstance().uninitialized[current_module.name]);
@@ -103,19 +102,6 @@ annotated(function() {
 
                 if (S.getInstance().preprocess) {
                     S.getInstance().ir = "annotated.setIR(" + JSON.stringify(order) + ");";
-                }
-            }
-        }
-
-        /**
-         * Modules may not have exposed properties in this version.
-         */
-        this.checkForProperties = function(obj, name) {
-            for (var prop in obj) {
-                if (obj.hasOwnProperty(prop)) {
-                    if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined") { // TODO add Object here?
-                        this.logError("Module " + name + " has illegal public property " + prop);
-                    }
                 }
             }
         }

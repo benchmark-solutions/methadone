@@ -28,17 +28,19 @@ annotated(function() {
 
     Module: Annotated.State = function() {
 
-        Import:  Annotated.State.__Internal;
+        Import: Annotated.Model.State;
 
         var __internal;
 
-        this.getInstance   = function() { return __internal; }
+        this.getInstance   = function() { 
+			return __internal; 
+		}
 
         this.getErrors     = function() { return __internal.errors } 
 
-        this.setCompile    = function(val) { __internal.compile = val; }
+        this.setCompile    = function(val) { val : Boolean; __internal.compile = val; }
 
-        this.setIR         = function(ir) { __internal.ir = ir; };
+        this.setIR         = function(ir) { ir : Boolean; __internal.ir = ir; };
         this.getIR         = function() { return __internal.ir; };
 
         this.setPreprocess = function(val) { __internal.preprocess = val; };
@@ -47,7 +49,7 @@ annotated(function() {
         this.getScript     = function() { return __internal.script; };
 
         this.reset = function() {
-            __internal = new Annotated.State.__Internal();
+            __internal = new Annotated.Model.State();
         }
 
         this.reset();
