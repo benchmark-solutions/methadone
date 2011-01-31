@@ -24,6 +24,8 @@ special IDE support).  Annotated.js aims to fix all that:
 
 - Mixins provide simple, flexible inheritance model.
 
+- Optional runtime type annotations 
+
 - Dependencies can be detected automagically;  with strict mode 
   enabled, modules and classes with missing dependencies will not 
   initialize, displaying an error in the browser console.
@@ -39,8 +41,6 @@ special IDE support).  Annotated.js aims to fix all that:
 
 - Run the dependency analysis offline & deploy your application with 
   no reflection overhead.
-
-
 
 ## Usage ##
 
@@ -203,6 +203,36 @@ constructor arguments.
         }
 
     });
+
+
+
+### Type Annotations ###
+
+Annotated.js has an annotation shortcut for runtime type checking - a 
+runtime exception will be thrown if the the arguments to a 
+Constructor or Method do not match their annotated types:
+
+    annotated(function() {
+	
+  		Class: Org.App.Car = function(manufacturer, make, year) {
+  			manufacturer :String;
+  			make         :String;
+  			year         :Number;
+			
+  			this.honkHorn(duration) {
+  				duration :Number;
+				
+  				for (var i = 0; i < duration; i ++) {
+  					console.log("A " + year + " " + manufacturer + " " + make + " honks!");
+  				}
+  			}
+  		}
+	
+    });
+
+Currently recognized types are Object, Array, String, Number, Function, 
+Boolean and any declared Module or Class.  Values that are undefined or 
+null will not typecheck if they are annotated.
     
 
 

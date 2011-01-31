@@ -34,7 +34,7 @@ annotated(function() {
         var identifier       = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)";
         var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*"
         var statementStart   = "(^|;|{)";
-        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/)"
+        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/|new)"
         var __whiteSpace__   = "\\s*?";
         var noIdentifier     = "(?![a-zA-Z0-9_\\$])";
 
@@ -47,12 +47,7 @@ annotated(function() {
 
         this.findParams = function(module) { return Annotated.Loader.findParams(module.code); };
 
-		Const: var reserved = {
-			"Import" : true,
-			"Mixin" : true
-		}
-
-        this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
+	    this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
 
         /**
          * Parse the contents of a annotated call to a list of module descriptor structs

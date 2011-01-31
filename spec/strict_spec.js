@@ -121,6 +121,91 @@ describe("Strict mode", function() {
     });
 
 
+    it("Handles Correct Constructor Arg type annotations", function() {
+        var errors = methtest(function() {
+            Class: Strict.TypedClass = function(param) {
+				param  :String;
+                this.result = function() { return param; }
+            }
+
+            Module: Strict.TypedModule = function() {
+				Import: Strict.TypedClass;
+                var local = new Strict.TypedClass("PASS")
+                this.result = function() { return local.result(); }
+            }
+        });
+
+        expect(Strict.TypedModule.result()).toEqual("PASS");
+        expect(errors.length).toEqual(0);
+    });
+
+
+
+    it("Handles Correct Method Arg type annotations", function() {
+        var errors = methtest(function() {
+            Module: Strict.TypedModule1 = function() {
+				this.result = function(param) { 
+					param :String;
+					return param; 
+				}
+            }
+
+            Module: Strict.TypedModule2 = function() {
+				Import: Strict.TypedModule1;
+                this.result = function() { return Strict.TypedModule1("PASS"); }
+            }
+        });
+
+        expect(Strict.TypedModule.result()).toEqual("PASS");
+        expect(errors.length).toEqual(0);
+    });
+
+
+
+    it("Handles Incorrect Constructor Arg type annotations", function() {
+		try {
+	        var errors = methtest(function() {
+	            Class: Strict.TypedClass = function(param) {
+					param  :Number;
+	                this.result = function() { return param; }
+	            }
+
+	            Module: Strict.TypedModule = function() {
+					Import: Strict.TypedClass;
+	                var local = new Strict.TypedClass("PASS")
+	                this.result = function() { return local.result(); }
+	            }
+	        });
+			expect(false).toEqual(true);	
+		} catch (e) {
+			expect(e.message).toEqual('Module Strict.TypedClass type error; param::number invoked with PASS::string')
+		}
+    });
+
+
+
+    it("Handles Incorrect Method Arg type annotations", function() {
+		try {
+	        var errors = methtest(function() {
+	           	 Module: Strict.TypedModuleA = function() {
+						this.result = function(param) { 
+							param :Number;
+							return param; 
+						}
+		            }
+
+		            Module: Strict.TypedModuleB = function() {
+						Import: Strict.TypedModuleA;
+		                Strict.TypedModuleA.result("PASS");
+		            }
+	        });
+			expect(false).toEqual(true);	
+		} catch (e) {
+			expect(e.message).toEqual('Type Error; PASS is not a number')
+		}
+    });
+
+
 
     it("Handles Class Mixins", function() {
         var errors = methtest(function() {
