@@ -123,14 +123,14 @@ describe("Strict mode", function() {
 
     it("Handles Correct Constructor Arg type annotations", function() {
         var errors = methtest(function() {
-            Class: Strict.TypedClass = function(param) {
+            Class: Strict.TypedConClass = function(param) {
 				param  :String;
                 this.result = function() { return param; }
             }
 
             Module: Strict.TypedModule = function() {
-				Import: Strict.TypedClass;
-                var local = new Strict.TypedClass("PASS")
+				Import: Strict.TypedConClass;
+                var local = new Strict.TypedConClass("PASS")
                 this.result = function() { return local.result(); }
             }
         });

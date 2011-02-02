@@ -31,6 +31,7 @@ annotated(function() {
         Import: var S = Annotated.State;
         Import: var U = Annotated.Util;
         Import: var L = Annotated.Loader;
+        Import: Annotated.Reflect.Core;
 
         /**
          * Loads all modules registered so far by iterating over the module
@@ -46,7 +47,7 @@ annotated(function() {
 
             var order = [];
             if (S.getInstance().compile) {
-                S.getInstance().script += Annotated.Reflect.render("__m", "Annotated.Loader");
+                S.getInstance().script += Annotated.Reflect.Core.render("__m", "Annotated.Loader");
             }
 
             if (S.getInstance().ir) {

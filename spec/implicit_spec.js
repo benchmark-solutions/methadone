@@ -1,4 +1,4 @@
-describe("Strict mode", function() {
+describe("Nonstrict mode", function() {
 	function methtest(code) {
 		annotated.reset();
 		annotated(function() { Init: false; });
@@ -171,18 +171,18 @@ describe("Strict mode", function() {
 
 	it("Handles Correct Constructor Arg type annotations", function() {
 		var errors = methtest(function() {
-			Module: Strict.TypedModule = function() {
-				var local = new Strict.TypedClass("PASS")
+			Module: Inferred.TypedModule = function() {
+				var local = new Inferred.TypedClass("PASS")
 				this.result = function() { return local.result(); }
 			}
-			Class: Strict.TypedClass = function(param) {
+			Class: Inferred.TypedClass = function(param) {
 				param  :String;
 				this.result = function() { return param; }
 			}
 
 		});
 
-		expect(Strict.TypedModule.result()).toEqual("PASS");
+		expect(Inferred.TypedModule.result()).toEqual("PASS");
 		expect(errors.length).toEqual(0);
 	});
 
@@ -190,10 +190,10 @@ describe("Strict mode", function() {
 
 	it("Handles Correct Method Arg type annotations", function() {
 		var errors = methtest(function() {
-			Module: Strict.TypedModule2 = function() {
-				this.result = function() { return Strict.TypedModule1("PASS"); }
+			Module: Inferred.TypedModule2 = function() {
+				this.result = function() { return Inferred.TypedModule1("PASS"); }
 			}
-			Module: Strict.TypedModule1 = function() {
+			Module: Inferred.TypedModule1 = function() {
 				this.result = function(param) { 
 					param :String;
 					return param; 
@@ -202,7 +202,7 @@ describe("Strict mode", function() {
 
 		});
 
-		expect(Strict.TypedModule.result()).toEqual("PASS");
+		expect(Inferred.TypedModule.result()).toEqual("PASS");
 		expect(errors.length).toEqual(0);
 	});
 
@@ -211,11 +211,11 @@ describe("Strict mode", function() {
 	it("Handles Incorrect Constructor Arg type annotations", function() {
 		try {
 			var errors = methtest(function() {
-				Module: Strict.TypedModule = function() {
-					var local = new Strict.TypedClass("PASS")
+				Module: Inferred.TypedModule = function() {
+					var local = new Inferred.TypedConClass("PASS")
 					this.result = function() { return local.result(); }
 				}
-				Class: Strict.TypedClass = function(param) {
+				Class: Inferred.TypedConClass = function(param) {
 					param  :Number;
 					this.result = function() { return param; }
 				}
@@ -223,7 +223,7 @@ describe("Strict mode", function() {
 			});
 			expect(false).toEqual(true);	
 		} catch (e) {
-			expect(e.message).toEqual('Module Strict.TypedClass type error; param::number invoked with PASS::string')
+			expect(e.message).toEqual('Module Inferred.TypedConClass type error; param::number invoked with PASS::string')
 		}
 	});
 
@@ -232,10 +232,10 @@ describe("Strict mode", function() {
 	it("Handles Incorrect Method Arg type annotations", function() {
 		try {
 			var errors = methtest(function() {
-				Module: Strict.TypedModuleB = function() {
-					Strict.TypedModuleA.result("PASS");
+				Module: Inferred.TypedModuleB = function() {
+					Inferred.TypedModuleA.result("PASS");
 				}
-				Module: Strict.TypedModuleA = function() {
+				Module: Inferred.TypedModuleA = function() {
 					this.result = function(param) { 
 						param :Number;
 						return param; 

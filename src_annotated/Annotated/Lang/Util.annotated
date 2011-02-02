@@ -52,6 +52,26 @@ annotated(function() {
             S.getInstance().errors.push(message);
             S.getInstance().valid = false;
         }
+        
+        this.exists = function(name) {
+            name :String;
+            
+            var conflict = "";
+            var obj = window;
+
+            name = name.split(".");
+            for (var i = 0; i < name.length; i++) {
+                var namespace = name[i];
+                obj = obj[namespace];
+                conflict += "." + namespace;
+                if (obj === undefined) {
+                    break;  
+                } else if (typeof obj !== "object") {
+                    return conflict.slice(1);
+                }
+            }
+            return undefined;
+        }
 
         /**
          * Utility funciton to find all of the keys of an object

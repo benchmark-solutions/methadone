@@ -26,9 +26,9 @@
 
 annotated(function() {
 
-    Module: Annotated.Reflect = function() {
+    Module: Annotated.Reflect.Core = function() {
 
-        Import: var P = Annotated.Reflect.Parse;
+        Import: var P = Annotated.Reflection.Parse;
         Import: var S = Annotated.State;
         Import: var U = Annotated.Util;
 

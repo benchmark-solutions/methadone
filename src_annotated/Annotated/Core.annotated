@@ -181,6 +181,7 @@ annotated(function() {
 						var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
 						var old_fn = obj[prop];
 						obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
+						this.extend(obj[prop], old_fn);
 					}
 				}
 			}
@@ -255,6 +256,11 @@ annotated(function() {
 			return restrictions;
         }
 
+		/**
+		 * Takes a string of valid Javascript and removes comments, 
+		 * strings and regex literals, leaving only valid Javascript 
+		 * tokens & symbols.
+		 */
         this.clean = function(code) {
 			code :String;
 			
@@ -309,6 +315,10 @@ annotated(function() {
             return code;
         }
 
+		/** 
+		 * Given a namespace name, returns the actual Object it represents,
+		 * or instantiates an empty object.
+		 */
         this.getOrCreate = function(name) {
 			name :String;
 		
@@ -322,6 +332,9 @@ annotated(function() {
             return obj;
         }
 
+		/** 
+		 * 'Merge' two Objects into one.
+		 */
         this.extend = function(target) {
             var args = Array.prototype.slice.call(arguments).slice(1);
             for (var i = 0; i < args.length; i++) {
@@ -329,7 +342,11 @@ annotated(function() {
                 for (name in options) {
                     copy = options[ name ];
                     if (target !== copy && copy !== undefined) {
-                        target[ name ] = copy;
+                        if (target[name]) {
+
+                        } else {
+                            target[ name ] = copy;
+                        }
                     }
                 }
             }
@@ -337,6 +354,10 @@ annotated(function() {
             return target;
         }
 
+		/**
+		 * Given a Module metadata Object & its initialization code,
+		 * initializes a module or class.
+		 */
         this.load = function(current_module, code) {
 			current_module :Object;
 			code           :String;

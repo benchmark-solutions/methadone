@@ -55,7 +55,7 @@ s.onload = function() {
         console.log("Errors found, aborting");
     } else {
         console.log("Writing annotated.js");
-        fs.writeFileSync("annotated.js", window.annotated.getScript() + "\nannotated=Annotated;");
+        fs.writeFileSync("annotated.js", window.annotated.getScript() + "\nannotated=Annotated.Core;");
         fs.unlinkSync("all.js");
         console.log("Done.");
     }

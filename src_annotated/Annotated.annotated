@@ -27,13 +27,13 @@ annotated(function() {
 
     Strict: true;
 
-    Module: Annotated = function() {
+    Module: Annotated.Core = function() {
 
         Mixin:  Annotated.State;
 
         Import: var C = Annotated.Container;
         Import: var I = Annotated.Init;
-        Import: var R = Annotated.Reflect;
+        Import: var R = Annotated.Reflect.Core;
         Import: var U = Annotated.Util;
 
         this.reset();

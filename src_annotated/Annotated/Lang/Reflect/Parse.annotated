@@ -1,35 +1,36 @@
 /**
- *  Annotated.js
- *
- *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
- *
- *  Permission is hereby granted, free of charge, to any person obtaining
- *  a copy of this software and associated documentation files (the
- *  "Software"), to deal in the Software without restriction, including
- *  without limitation the rights to use, copy, modify, merge, publish,
- *  distribute, sublicense, and/or sell copies of the Software, and to
- *  permit persons to whom the Software is furnished to do so, subject to
- *  the following conditions:
- *
- *  The above copyright notice and this permission notice shall be
- *  included in all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+*  Annotated.js
+*
+*  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
+*
+*  Permission is hereby granted, free of charge, to any person obtaining
+*  a copy of this software and associated documentation files (the
+*  "Software"), to deal in the Software without restriction, including
+*  without limitation the rights to use, copy, modify, merge, publish,
+*  distribute, sublicense, and/or sell copies of the Software, and to
+*  permit persons to whom the Software is furnished to do so, subject to
+*  the following conditions:
+*
+*  The above copyright notice and this permission notice shall be
+*  included in all copies or substantial portions of the Software.
+*
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+*  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+*  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+*  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+*  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*/
 
 annotated(function() {
 
-    Module: Annotated.Reflect.Parse = function() {
+    Module: Annotated.Reflection.Parse = function() {
 
         Import: var S = Annotated.State;
         Import: var U = Annotated.Util;
+        Import: Annotated.Loader;
 
         var identifier       = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)";
         var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*"
@@ -39,21 +40,21 @@ annotated(function() {
         var noIdentifier     = "(?![a-zA-Z0-9_\\$])";
 
         /**
-         * Removes all non-syntax from Javascript text: Strings, Regex Literals &
-         * Comments.  If the original Javascript was valid, then the resultant
-         * Javascript should be safe enough to identify keywords via Regex.
-         */
+        * Removes all non-syntax from Javascript text: Strings, Regex Literals &
+        * Comments.  If the original Javascript was valid, then the resultant
+        * Javascript should be safe enough to identify keywords via Regex.
+        */
         this.clean = Annotated.Loader.clean;
 
         this.findParams = function(module) { return Annotated.Loader.findParams(module.code); };
 
-	    this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
+        this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
 
         /**
-         * Parse the contents of a annotated call to a list of module descriptor structs
-         */
+        * Parse the contents of a annotated call to a list of module descriptor structs
+        */
         this.findModules = function(code) {
-			code :String;
+            code :String;
 
             var module_regex = new RegExp(statementStart + __whiteSpace__ + "(Module|Class)" + __whiteSpace__ + ":", "gm");
             var strict_regex = new RegExp(statementStart + __whiteSpace__ + "Strict" + __whiteSpace__ + ":" + __whiteSpace__ + "true", "gm");
@@ -66,9 +67,13 @@ annotated(function() {
             while (moduleParsed = module_regex.exec(code)) {
                 var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
                 var module_type = moduleParsed[2];
+                var conflict = U.exists(module_name)
+                if (conflict) {
+                    U.logError("Module name " + module_name + " conflicts with " + conflict);
+                    break;
+                };
 
                 this.validateModule(module_name);
-                U.getOrCreate(module_name);
                 S.getInstance().uninitialized[module_name] = true;
                 S.getInstance().modules[module_name] = {
                     name: module_name,
@@ -81,16 +86,17 @@ annotated(function() {
         }
 
         this.findTaggedSymbols = function(module, regex_) {
-			module :Object;
-			regex_ :String;
+            module :Object;
+            regex_ :String;
 
             var imports = {};
 
             regex = new RegExp(statementStart + __whiteSpace__ 
-				+ "(" + regex_ + ")" + __whiteSpace__ 
-				+ ":\\s*((var\\s+)?" + identifier + __whiteSpace__ 
-				+ "=" + __whiteSpace__ + ")?", "gm");
-				
+                + "(" + regex_ + ")" + __whiteSpace__ 
+                + ":\\s*((var\\s+)?" + identifier + __whiteSpace__ 
+                + "=" + __whiteSpace__ + ")?", "gm"
+            );
+
             while (regex.exec(module.code)) {
                 var import_name = module.code.slice(regex.lastIndex).match(/([a-zA-Z0-9_\\.\\$]+)(\()?/);
                 if (regex_ === "Root") {
@@ -113,9 +119,9 @@ annotated(function() {
         }
 
         this.findImplicitModules = function(name, code) {
-			name :String;
-			code :String;
-			
+            name :String;
+            code :String;
+
             var imports = {};
             for (var module_name in S.getInstance().modules) {
                 if (S.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
@@ -127,7 +133,7 @@ annotated(function() {
                                 var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + noIdentifier, "gm");
                                 __regex.lastIndex = regex.lastIndex - module_name.length;
                                 if (path = __regex.exec(code)) {
-                                    if ((__regex.lastIndex - regex.lastIndex) == (__module_name.length - module_name.length)) {
+                                    if ((__regex.lastIndex - regex.lastIndex) === (__module_name.length - module_name.length) && __module_name.length > module_name.length) {
                                         continue match;
                                     }
                                 }
@@ -146,8 +152,8 @@ annotated(function() {
         }
 
         this.validateModule = function(name) {
-			name :String;
-			
+            name :String;
+
             for (module in S.getInstance().modules) {
                 if (S.getInstance().modules.hasOwnProperty(module) && S.getInstance().modules[module].name === name) {
                     U.logError(name + " declared twice");
