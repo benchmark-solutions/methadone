@@ -261,5 +261,24 @@ describe("Nonstrict mode", function() {
 		expect(errors[0]).toEqual('Module Inferred.UnresolvableDependencies declares an illegal Import: Inferred.FakeModule');
 		expect(errors.length).toEqual(1);
 	});
+	
+	it("Deals with a restriction on a type constructor, without wrapping the constructor twice", function() {
+         var errors = methtest(function() {
+             Class: Strict.ConflictClassA = function(val) {
+                 val :String;
+                 this.result = val
+             };
+
+             Class: Strict.ConflictClassA.ConflictClassB = function(val) {
+                 val :String;
+                 
+                 this.result = new Strict.ConflictClassA(val).result;
+             };
+         });
+
+         expect(new Strict.ConflictClassA.ConflictClassB('PASS').result).toEqual('PASS');
+         expect(errors.length).toEqual(0);
+     });
+    
 
 });

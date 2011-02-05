@@ -30,7 +30,7 @@ annotated(function() {
      * This is a special class as it is designed to be serialized for compilation.
      * It shouldn't have dependencies, and should generall be as small as possible 
      */
-    Module: Annotated.Loader = function() {
+    Module: Annotated.Runtime = function() {
 
         /**
          * Instantiate the module or class.  This includes creating
@@ -177,7 +177,7 @@ annotated(function() {
 			
 			for (var prop in obj) {
 				if (obj.hasOwnProperty(prop)) {
-					if (typeof obj[prop] === "function") {
+					if (typeof obj[prop] === "function" && prop[0] !== prop[0].toUpperCase()) {      // TODO Holy WTF, Batman!  This can come out when we make runtime refactor
 						var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
 						var old_fn = obj[prop];
 						obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
@@ -193,7 +193,7 @@ annotated(function() {
 			obj          :Object;
 			old          :Function;
 		
-			var x = function() {
+			var __annotated_type_check__ = function() {
     		    var args = Array.prototype.slice.call(arguments);
 				var argNum = 0;
 				for (var rest in restrictions) {
@@ -208,10 +208,10 @@ annotated(function() {
 					}
 					argNum ++;
 				}
-				return old.apply(obj, args);
+				return old.apply(this, args);
 			}
-			x.toString = function() { return old.toString() };
-			return x;
+			__annotated_type_check__.toString = function() { return old.toString() };
+			return __annotated_type_check__;
 		}
 
         this.findParams = function(code) {
@@ -362,7 +362,14 @@ annotated(function() {
 			current_module :Object;
 			code           :String;
 			
-			window["Boolean"] = {};
+			window["Boolean"] = window["Boolean"] || {};
+			if(typeof String.prototype.trim !== 'function') {
+              String.prototype.trim = function() {
+                return this.replace(/^\s+|\s+$/g, ''); 
+              }
+            }
+
+    		
 			this.getOrCreate(current_module.name);
             this.assign(current_module.name, code);
             this.initializeModule(current_module) + ");\n";;

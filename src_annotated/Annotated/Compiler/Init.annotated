@@ -26,9 +26,9 @@
 
 annotated(function() {
 
-    Module: Annotated.Init = function() {
+    Module: Annotated.Compiler.Init = function() {
 
-        Import: var S = Annotated.State;
+        Import: var S = Annotated.Compiler.State;
 
         var __init__ = false;
         

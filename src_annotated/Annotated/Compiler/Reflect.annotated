@@ -26,11 +26,11 @@
 
 annotated(function() {
 
-    Module: Annotated.Reflect.Core = function() {
+    Module: Annotated.Compiler.Reflect = function() {
 
-        Import: var P = Annotated.Reflection.Parse;
-        Import: var S = Annotated.State;
-        Import: var U = Annotated.Util;
+        Import: var P = Annotated.Compiler.Reflection.Parse;
+        Import: var S = Annotated.Compiler.State;
+        Import: var U = Annotated.Compiler.Util;
 
         /**
          * Finds all of the dependencies for a set of modules - runs after all

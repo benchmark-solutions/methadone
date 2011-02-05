@@ -26,12 +26,12 @@
 
 annotated(function() {
 
-    Module: Annotated.Container = function() {
+    Module: Annotated.Compiler.Container = function() {
 
-        Import: var S = Annotated.State;
-        Import: var U = Annotated.Util;
-        Import: var L = Annotated.Loader;
-        Import: Annotated.Reflect.Core;
+        Import: var S = Annotated.Compiler.State;
+        Import: var U = Annotated.Compiler.Util;
+        Import: var L = Annotated.Runtime;
+        Import: Annotated.Compiler.Reflect;
 
         /**
          * Loads all modules registered so far by iterating over the module
@@ -47,7 +47,7 @@ annotated(function() {
 
             var order = [];
             if (S.getInstance().compile) {
-                S.getInstance().script += Annotated.Reflect.Core.render("__m", "Annotated.Loader");
+                S.getInstance().script += Annotated.Compiler.Reflect.render("__m", "Annotated.Runtime");
             }
 
             if (S.getInstance().ir) {

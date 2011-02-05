@@ -26,7 +26,7 @@
 
 annotated(function() {
 
-    Class: Annotated.Model.State = function() {
+    Class: Annotated.Compiler.Model.State = function() {
 	
         this.strict        = false;
         this.valid         = true;

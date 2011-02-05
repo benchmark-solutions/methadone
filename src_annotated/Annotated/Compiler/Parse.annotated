@@ -26,16 +26,16 @@
 
 annotated(function() {
 
-    Module: Annotated.Reflection.Parse = function() {
+    Module: Annotated.Compiler.Reflection.Parse = function() {
 
-        Import: var S = Annotated.State;
-        Import: var U = Annotated.Util;
-        Import: Annotated.Loader;
+        Import: var S = Annotated.Compiler.State;
+        Import: var U = Annotated.Compiler.Util;
+        Import: Annotated.Runtime;
 
         var identifier       = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)";
         var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*"
         var statementStart   = "(^|;|{)";
-        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/|new)"
+        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/|new|\\))"
         var __whiteSpace__   = "\\s*?";
         var noIdentifier     = "(?![a-zA-Z0-9_\\$])";
 
@@ -44,11 +44,11 @@ annotated(function() {
         * Comments.  If the original Javascript was valid, then the resultant
         * Javascript should be safe enough to identify keywords via Regex.
         */
-        this.clean = Annotated.Loader.clean;
+        this.clean = Annotated.Runtime.clean;
 
-        this.findParams = function(module) { return Annotated.Loader.findParams(module.code); };
+        this.findParams = function(module) { return Annotated.Runtime.findParams(module.code); };
 
-        this.findRestrictions = function(module) { return Annotated.Loader.findRestrictions(module.code); };
+        this.findRestrictions = function(module) { return Annotated.Runtime.findRestrictions(module.code); };
 
         /**
         * Parse the contents of a annotated call to a list of module descriptor structs
@@ -67,12 +67,13 @@ annotated(function() {
             while (moduleParsed = module_regex.exec(code)) {
                 var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
                 var module_type = moduleParsed[2];
-                var conflict = U.exists(module_name)
-                if (conflict) {
-                    U.logError("Module name " + module_name + " conflicts with " + conflict);
-                    break;
-                };
 
+                // var conflict = U.exists(module_name)
+                //                if (conflict) {
+                //                    U.logError("Module name " + module_name + " conflicts with " + conflict);
+                //                    break;
+                //                };
+               
                 this.validateModule(module_name);
                 S.getInstance().uninitialized[module_name] = true;
                 S.getInstance().modules[module_name] = {
@@ -126,11 +127,11 @@ annotated(function() {
             for (var module_name in S.getInstance().modules) {
                 if (S.getInstance().modules.hasOwnProperty(module_name) && name != module_name) {
                     // TODO must simulate lookbehind here to prevent capturing namespace substrings!
-                    var regex = new RegExp(parameterStart + __whiteSpace__ + module_name.replace(".", "\\.").replace("$", "\\$") + noIdentifier, "gm");
+                    var regex = new RegExp(parameterStart + __whiteSpace__ + module_name.replace(/\./gm, "\\.").replace(/\$/gm, "\\$") + noIdentifier, "gm");
                     match: while (regex.exec(code)) {
                         for (var __module_name in S.getInstance().modules) {
                             if (S.getInstance().modules.hasOwnProperty(__module_name) && __module_name != module_name) {
-                                var __regex = new RegExp(__module_name.replace(".", "\\.").replace("$", "\\$") + noIdentifier, "gm");
+                                var __regex = new RegExp(__module_name.replace(/\./gm, "\\.").replace(/\$/gm, "\\$") + noIdentifier, "gm");
                                 __regex.lastIndex = regex.lastIndex - module_name.length;
                                 if (path = __regex.exec(code)) {
                                     if ((__regex.lastIndex - regex.lastIndex) === (__module_name.length - module_name.length) && __module_name.length > module_name.length) {

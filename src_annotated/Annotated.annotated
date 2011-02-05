@@ -27,20 +27,20 @@ annotated(function() {
 
     Strict: true;
 
-    Module: Annotated.Core = function() {
+    Module: Annotated = function() {
 
-        Mixin:  Annotated.State;
+        Mixin:  Annotated.Compiler.State;
 
-        Import: var C = Annotated.Container;
-        Import: var I = Annotated.Init;
-        Import: var R = Annotated.Reflect.Core;
-        Import: var U = Annotated.Util;
+        Import: var C = Annotated.Compiler.Container;
+        Import: var I = Annotated.Compiler.Init;
+        Import: var R = Annotated.Compiler.Reflect;
+        Import: var U = Annotated.Compiler.Util;
 
         this.reset();
 
         var getState = this.getInstance
 		var self = this;	
-
+		
         Root: this.__scope__ = function(raw_code) {
 			raw_code :String;
             var cache = undefined;

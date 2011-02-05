@@ -26,10 +26,10 @@
 
 annotated(function() {
 
-    Module: Annotated.Util = function() {
+    Module: Annotated.Compiler.Util = function() {
 
-        Import: var S = Annotated.State;
-        Import: var L = Annotated.Loader;
+        Import: var S = Annotated.Compiler.State;
+        Import: var L = Annotated.Runtime;
 
         this.getOrCreate = L.getOrCreate;
         this.extend      = L.extend;
