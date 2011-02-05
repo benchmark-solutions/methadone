@@ -179,9 +179,11 @@ annotated(function() {
 				if (obj.hasOwnProperty(prop)) {
 					if (typeof obj[prop] === "function" && prop[0] !== prop[0].toUpperCase()) {      // TODO Holy WTF, Batman!  This can come out when we make runtime refactor
 						var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
-						var old_fn = obj[prop];
-						obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
-						this.extend(obj[prop], old_fn);
+						if (restrictions.length > 0) {
+                            var old_fn = obj[prop];
+                            obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
+                            this.extend(obj[prop], old_fn);
+                        }
 					}
 				}
 			}
