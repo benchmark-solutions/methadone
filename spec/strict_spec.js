@@ -283,6 +283,20 @@ describe("Strict mode", function() {
          expect(new Strict.ConflictClassA.ConflictClassB('PASS').result).toEqual('PASS');
          expect(errors.length).toEqual(0);
      });
+     
+     it("Handles Modules with illegal properties", function() {
+         try {
+            var errors = methtest(function() {
+                Module: Strict.IllegalProperty = function() {
+                    this.result = "FAIL";
+                }
+            });
+            expect(true).toEqual(false);
+        } catch (ex) {
+            expect(ex.message).toEqual("Module Strict.IllegalProperty has illegal public property result");
+        }
+    });
+     
     
 
 });

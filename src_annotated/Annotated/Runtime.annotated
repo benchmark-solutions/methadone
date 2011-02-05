@@ -1,44 +1,44 @@
 /**
- *  Annotated.js
- *
- *  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
- *
- *  Permission is hereby granted, free of charge, to any person obtaining
- *  a copy of this software and associated documentation files (the
- *  "Software"), to deal in the Software without restriction, including
- *  without limitation the rights to use, copy, modify, merge, publish,
- *  distribute, sublicense, and/or sell copies of the Software, and to
- *  permit persons to whom the Software is furnished to do so, subject to
- *  the following conditions:
- *
- *  The above copyright notice and this permission notice shall be
- *  included in all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+*  Annotated.js
+*
+*  Copyright (c) 2010-2011 Andrew Stein & Benchmark Solutions
+*
+*  Permission is hereby granted, free of charge, to any person obtaining
+*  a copy of this software and associated documentation files (the
+*  "Software"), to deal in the Software without restriction, including
+*  without limitation the rights to use, copy, modify, merge, publish,
+*  distribute, sublicense, and/or sell copies of the Software, and to
+*  permit persons to whom the Software is furnished to do so, subject to
+*  the following conditions:
+*
+*  The above copyright notice and this permission notice shall be
+*  included in all copies or substantial portions of the Software.
+*
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+*  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+*  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+*  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+*  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+*  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*
+*/
 
 annotated(function() {
 
     /**
-     * This is a special class as it is designed to be serialized for compilation.
-     * It shouldn't have dependencies, and should generall be as small as possible 
-     */
+    * This is a special class as it is designed to be serialized for compilation.
+    * It shouldn't have dependencies, and should generall be as small as possible 
+    */
     Module: Annotated.Runtime = function() {
 
         /**
-         * Instantiate the module or class.  This includes creating
-         * a fake constructor function to handle usage as a Mixin declaration.
-         */
+        * Instantiate the module or class.  This includes creating
+        * a fake constructor function to handle usage as a Mixin declaration.
+        */
         this.initializeModule = function(current_module) {
-			current_module :Object;
-			
+            current_module :Object;
+
             var pending_mixins = [];
             var self = [];
             if (current_module.type === "Module") {
@@ -47,13 +47,13 @@ annotated(function() {
                 var _constructor = this.getOrCreate(current_module.name);
                 this.processMixins(current_module, self, pending_mixins);
                 _constructor.apply(self[self.length - 1]);
-                this.checkForProperties(current_module);
                 if (current_module.root) {
                     this.assign(current_module.name, this.extend(self[self.length - 1][current_module.root], self[self.length - 1]));
                 } else {
                     this.assign(current_module.name, self[self.length - 1]);
                 }
-				this.addRestrictions(self[self.length - 1], current_module);
+                this.checkForProperties(current_module);
+                this.addRestrictions(self[self.length - 1], current_module);
                 self.pop();
                 pending_mixins.pop();
             } else {
@@ -63,17 +63,17 @@ annotated(function() {
         }
 
         /**
-         * Locally binds some vars for the scope of a constructor function;  this is where
-         * dispatch happens which switches functionality of this function between
-         * Mixin declaration and constructor.
-         */
+        * Locally binds some vars for the scope of a constructor function;  this is where
+        * dispatch happens which switches functionality of this function between
+        * Mixin declaration and constructor.
+        */
         this.generateClassConstructor = function(_module, _constructor, self, pending_mixins) {
-			_module        :Object;
-			_constructor   :Function;
-			self           :Array;
-			pending_mixins :Array;
-           
- 			var __this = this;
+            _module        :Object;
+            _constructor   :Function;
+            self           :Array;
+            pending_mixins :Array;
+
+            var __this = this;
             return function() {
                 if (pending_mixins.length > 0 && pending_mixins[pending_mixins.length - 1][_module.name]) {
                     self.push(self[self.length - 1]);
@@ -86,11 +86,10 @@ annotated(function() {
                 __this.processMixins(_module, self, pending_mixins);
 
                 var args = Array.prototype.slice.call(arguments);
-				__this.checkRestrictions(_module, args);
+                __this.checkRestrictions(_module, args);
 
                 _constructor.apply(self[self.length - 1], args);
-                __this.checkForProperties(_module);
-			    __this.addRestrictions(self[self.length - 1], _module);
+                __this.addRestrictions(self[self.length - 1], _module);
 
                 pending_mixins.pop();
                 return self.pop();
@@ -98,13 +97,13 @@ annotated(function() {
         }
 
         /**
-         * Instantiate and collect the classes for a mixin and attach them to the
-         * object at the top of the stack.
-         */
+        * Instantiate and collect the classes for a mixin and attach them to the
+        * object at the top of the stack.
+        */
         this.processMixins = function(_module, self, pending_mixins) {
-			_module        :Object;
-			self           :Array;
-			pending_mixins :Array;
+            _module        :Object;
+            self           :Array;
+            pending_mixins :Array;
 
             for (var mixin_name in _module.mixins) {
                 if (_module.mixins[mixin_name] === "MODULE") {
@@ -119,11 +118,11 @@ annotated(function() {
         }
 
         /**
-         * Assigns an instance of an Object to a namespace.
-         */
+        * Assigns an instance of an Object to a namespace.
+        */
         this.assign = function(name, obj) {
-			name :String;
-			
+            name :String;
+
             var namespaces = name.split(".");
             var ns         = namespaces[0];
             var nsparent   = window;
@@ -141,11 +140,11 @@ annotated(function() {
         }
 
         /**
-         * Modules may not have exposed properties in this version.
-         */
+        * Modules may not have exposed properties in this version.
+        */
         this.checkForProperties = function(module) {
-			module :Object;
-			var obj = this.getOrCreate(module.name);	
+            module :Object;
+            var obj = this.getOrCreate(module.name);	
             for (var prop in obj) {
                 if (obj.hasOwnProperty(prop)) {
                     if (typeof obj[prop] !== "function" && typeof obj[prop] !== "undefined" && typeof obj[prop] !== "object") {
@@ -155,69 +154,80 @@ annotated(function() {
             }
         }
 
-       this.checkRestrictions = function(module, args) {
-			module :Object;
-			args   :Array;
-			
-			var obj = this.getOrCreate(module.name);	
-			var argNum = 0;
-			for (var prop in module.restrictions) {
+        this.checkRestrictions = function(module, args) {
+            module :Object;
+            args   :Array;
+
+            var obj = this.getOrCreate(module.name);	
+            var argNum = 0;
+            for (var prop in module.restrictions) {
                 if (module.restrictions.hasOwnProperty(prop)) {
-					if (module.restrictions[prop] !== "None" && typeof args[argNum] !== module.restrictions[prop]) {
-						throw Error("Module " + module.name + " type error; " 
-							+ prop + "::" + module.restrictions[prop] + " invoked with " + args[argNum] + "::" + (typeof args[argNum]));
-					}
+                    if (module.restrictions[prop] !== "None" && typeof args[argNum] !== module.restrictions[prop]) {
+                        throw Error("Module " + module.name + " type error; " 
+                        + prop + "::" + module.restrictions[prop] + " invoked with " + args[argNum] + "::" + (typeof args[argNum]));
+                    }
                 }
             }
         }
 
-		this.addRestrictions = function(obj, module) {
-			obj    :Object;
-			module :Object;
-			
-			for (var prop in obj) {
-				if (obj.hasOwnProperty(prop)) {
-					if (typeof obj[prop] === "function" && prop[0] !== prop[0].toUpperCase()) {      // TODO Holy WTF, Batman!  This can come out when we make runtime refactor
-						var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
-						if (restrictions.length > 0) {
+        /**
+        * Utility funciton to find all of the keys of an object
+        * @param o
+        */
+        this.keys = function(o) {
+            o :Object;
+            var result = [];
+            for (var name in o) { if (o.hasOwnProperty(name)) result.push(name); }
+            return result;
+        }
+
+        this.addRestrictions = function(obj, module) {
+            obj    :Object;
+            module :Object;
+
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    if (typeof obj[prop] === "function" && prop[0] !== prop[0].toUpperCase()) {      // TODO Holy WTF, Batman!  This can come out when we make runtime refactor
+                        var restrictions = this.findRestrictions(this.clean(obj[prop].toString()));
+                        if (this.keys(restrictions).length > 0) {
                             var old_fn = obj[prop];
                             obj[prop] = this.typeFn(restrictions, prop, obj, obj[prop]);
                             this.extend(obj[prop], old_fn);
                         }
-					}
-				}
-			}
-		}
-		
-		this.typeFn = function(restrictions, prop, obj, old) {
-			restrictions :Object;
-			prop         :String;
-			obj          :Object;
-			old          :Function;
-		
-			var __annotated_type_check__ = function() {
-    		    var args = Array.prototype.slice.call(arguments);
-				var argNum = 0;
-				for (var rest in restrictions) {
-					if (restrictions[rest] === "array") {
-						if (!(args[argNum] instanceof Array)) {
-							throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
-						}
-					} else if ((args[argNum] instanceof Array) && restrictions[rest] !== "None") {
-						throw Error("Type Error; " + args[argNum] + "(Array) is not a " + restrictions[rest] + " in method " + prop);
-					} else if (restrictions[rest] !== "None" && typeof args[argNum] !== restrictions[rest]) {
-						throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
-					}
-					argNum ++;
-				}
-				return old.apply(this, args);
-			}
-			__annotated_type_check__.toString = function() { return old.toString() };
-			return __annotated_type_check__;
-		}
+                    }
+                }
+            }
+        }
+
+        this.typeFn = function(restrictions, prop, obj, old) {
+            restrictions :Object;
+            prop         :String;
+            obj          :Object;
+            old          :Function;
+
+            var __annotated_type_check__ = function() {
+                var args = Array.prototype.slice.call(arguments);
+                var argNum = 0;
+                for (var rest in restrictions) {
+                    if (restrictions[rest] === "array") {
+                        if (!(args[argNum] instanceof Array)) {
+                            throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
+                        }
+                    } else if ((args[argNum] instanceof Array) && restrictions[rest] !== "None") {
+                        throw Error("Type Error; " + args[argNum] + "(Array) is not a " + restrictions[rest] + " in method " + prop);
+                    } else if (restrictions[rest] !== "None" && typeof args[argNum] !== restrictions[rest]) {
+                        throw Error("Type Error; " + args[argNum] + " is not a " + restrictions[rest]);
+                    }
+                    argNum ++;
+                }
+                return old.apply(this, args);
+            }
+            __annotated_type_check__.toString = function() { return old.toString() };
+            return __annotated_type_check__;
+        }
 
         this.findParams = function(code) {
-			code :String;
+            code :String;
             var params = new RegExp("\\((.*?)\\)", "gm").exec(code)[1].split(",");
             for (var i = 0; i < params.length; i ++) {
                 params[i] = params[i].trim();
@@ -227,45 +237,45 @@ annotated(function() {
         }
 
         this.findRestrictions = function(code) {
-	        code :String;
-			var reserved = {
-				"Import" : true,
-				"Mixin" : true
-			}
+            code :String;
+            var reserved = {
+                "Import" : true,
+                "Mixin" : true
+            }
             params = this.findParams(code);
             var code = code.split("{")[1].split(/(;)/gm) // TODO $ makes firefox fail - weird;
-			var restrictions  = {};
-			var isRestriction = true;
-			for (var param in params) {
-            	restrictions[params[param]] = "None";
-			}
-			for (var i = 0; (i < code.length) && isRestriction; i += 2) {
+            var restrictions  = {};
+            var isRestriction = true;
+            for (var param in params) {
+                restrictions[params[param]] = "None";
+            }
+            for (var i = 0; (i < code.length) && isRestriction; i += 2) {
                 isRestriction = false;
                 var line = code[i].split(":");
                 for (var param in params) {
-	                if (line[0].trim() != "") {
+                    if (line[0].trim() != "") {
                         if (params[param] === line[0].trim()) {
                             restrictions[line[0].trim()] = line[1].replace(";", "").toLowerCase().trim(); 
-							isRestriction = true;
-						} else if (reserved[line[0].trim()]) {
-							isRestriction  = true;
-						}
-                   	} else {
-						isRestriction = true;
-					}
+                            isRestriction = true;
+                        } else if (reserved[line[0].trim()]) {
+                            isRestriction  = true;
+                        }
+                    } else {
+                        isRestriction = true;
+                    }
                 }
             }
-			return restrictions;
+            return restrictions;
         }
 
-		/**
-		 * Takes a string of valid Javascript and removes comments, 
-		 * strings and regex literals, leaving only valid Javascript 
-		 * tokens & symbols.
-		 */
+        /**
+        * Takes a string of valid Javascript and removes comments, 
+        * strings and regex literals, leaving only valid Javascript 
+        * tokens & symbols.
+        */
         this.clean = function(code) {
-			code :String;
-			
+            code :String;
+
             var quote_regex = new RegExp("(\\/\\/|\\/\\*|\\\\\"|\\\\\'|[\\(,=^;]\\s*?/(?!/)|\\/|/)|['\"]", "gm");
             var in_quotes = false;
             var last_quote = "";
@@ -317,13 +327,13 @@ annotated(function() {
             return code;
         }
 
-		/** 
-		 * Given a namespace name, returns the actual Object it represents,
-		 * or instantiates an empty object.
-		 */
+        /** 
+        * Given a namespace name, returns the actual Object it represents,
+        * or instantiates an empty object.
+        */
         this.getOrCreate = function(name) {
-			name :String;
-		
+            name :String;
+
             var obj = window;
             name = name.split(".");
             for (var i = 0; i < name.length; i++) {
@@ -334,9 +344,9 @@ annotated(function() {
             return obj;
         }
 
-		/** 
-		 * 'Merge' two Objects into one.
-		 */
+        /** 
+        * 'Merge' two Objects into one.
+        */
         this.extend = function(target) {
             var args = Array.prototype.slice.call(arguments).slice(1);
             for (var i = 0; i < args.length; i++) {
@@ -356,23 +366,23 @@ annotated(function() {
             return target;
         }
 
-		/**
-		 * Given a Module metadata Object & its initialization code,
-		 * initializes a module or class.
-		 */
+        /**
+        * Given a Module metadata Object & its initialization code,
+        * initializes a module or class.
+        */
         this.load = function(current_module, code) {
-			current_module :Object;
-			code           :String;
-			
-			window["Boolean"] = window["Boolean"] || {};
-			if(typeof String.prototype.trim !== 'function') {
-              String.prototype.trim = function() {
-                return this.replace(/^\s+|\s+$/g, ''); 
-              }
+            current_module :Object;
+            code           :String;
+
+            window["Boolean"] = window["Boolean"] || {};
+            if(typeof String.prototype.trim !== 'function') {
+                String.prototype.trim = function() {
+                    return this.replace(/^\s+|\s+$/g, ''); 
+                }
             }
 
-    		
-			this.getOrCreate(current_module.name);
+
+            this.getOrCreate(current_module.name);
             this.assign(current_module.name, code);
             this.initializeModule(current_module) + ");\n";;
         }
