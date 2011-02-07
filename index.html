@@ -15,7 +15,7 @@
       
       <div id="body">
           <p>For large, complex Javascript applications or libraries, Annotated.js
-          provides a language extension for expressing the structure & validity of 
+          provides a language extension for expressing the structure &amp; validity of 
           your code.  By annotating your regular Javascript code, the Annotated.js 
           runtime provides additional language features like declarative namespaces, 
           class and module macros, and runtime type testing. </p>
@@ -37,7 +37,7 @@
           <li><p>Run the dependency analysis offline &amp; deploy your application with 
           no reflection overhead.</p></li>
           </ul>
-
+<br/>
           <h2>Usage</h2>
 
           <h3>Install</h3>
@@ -71,7 +71,7 @@
 
   });
           </code></pre>
-          
+          <br/>
           <h3>Modules &amp; Classes</h3>
 
           <p>Within a annotated block, you can declare Modules and Classes (which
@@ -142,7 +142,7 @@
           </code></pre>
 
           <p>That's it!  Annotated.js does the heavy lifting for you.</p>
-
+<br/>
           <h3>Mixins</h3>
 
           <p>Annotated.js supports mixins via the mixin annotation - analagous 
@@ -210,7 +210,7 @@
 
   });
           </code></pre>
-
+<br/>
           <h3>Type Testing</h3>
 
           <p>Annotated.js has an annotation shortcut for runtime type testing - a 
@@ -244,10 +244,10 @@
           <p>Currently recognized types are Object, Array, String, Number, Function, 
           Boolean and any declared Module or Class.  Values that are undefined or 
           null will not typecheck if they are annotated.</p>
-
+<br/>
           <h3>Strict Mode</h3>
 
-          <p>For stronger control over your code's usage & organization, Annotated.js'
+          <p>For stronger control over your code's usage &amp; organization, Annotated.js'
           Compiler includes a strict mode which adds additional
           dependency safety and required explicit dependency declaration.
           Strict mode is enabled via a Annotated.js annotation.</p>
@@ -274,12 +274,12 @@
 
       Module: Org.App.Cat = function() {
           Import: Org.App.AnimalUtils;
+          Import: var alias = Org.App.BathUtils;
+
           this.meow = function() { 
               Org.App.AnimalUtils.say("Meow, bitches!"); 
-              };
+          };
 
-          // Imports can be given aliases too
-          Import: var alias = Org.App.BathUtils;
           this.wash = alias.wash;
       }
 
@@ -293,7 +293,7 @@
 
   });
           </code></pre>
-
+<br/>
           <h3>Initialization Record</h3>
           
           
@@ -303,9 +303,13 @@
           the generated ir.js file in your application's head tag to eliminate the
           overhead associated with startup overhead - providing the same speed-up a
           compilation step would provide, while preserving 1:1 code correspondence in the
-          IDE and browser.  Simply follow these instructions:</p>
+          IDE and browser.</p>  
 
- <img src="architecture.png" style="float: right; padding-left: 30px; padding-top: 30px; padding-bottom: 20px;">
+          <img src="architecture.png" style=" padding-left: 100px; padding-top: 30px; padding-bottom: 20px;">
+ 
+          <p>You must configure your application's deploy scripts to generate an ir.js 
+          file and include it in the generated page.  To generate such a file:</p>
+          
           <ol>
           <li><p>Install Node.js &amp; NPM</p></li>
           <li><p>'npm install'</p></li>
@@ -319,7 +323,7 @@
           appropriate metaphor for the loadtime speedup your application will
           experience)</p></li>
           </ol>
-          
+          <br/>
           <h2>Development</h2>
 
           <h3>Bootstrap</h3>
@@ -345,6 +349,7 @@
           Annotated.js necessary for self-hosting</p>
           
       </div>
+      <br/>
       </div>
       <script>prettyPrint()</script>
   </body>
