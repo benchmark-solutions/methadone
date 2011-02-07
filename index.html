@@ -15,33 +15,35 @@
       
       <div id="body">
           <p>For large, complex Javascript applications or libraries, Annotated.js
-          provides a language extension for expressing the structure & validity of 
+          provides a language extension for expressing the structure &amp; validity of 
           your code.  By annotating your regular Javascript code, the Annotated.js 
           runtime provides additional language features like declarative namespaces, 
           class and module macros, and runtime type testing. </p>
-
           <ul>
-          <li><p>Runs directly in the browser with no code transformation or
-          compilation - what you see in the IDE is what you get in the
-          browser.</p></li>
-          <li><p>Classes and Modules define a clean, simple API for structuring
-          Object Oriented Applications in Javascript, with an intuitive
-          mapping to standard Javascript Objects.</p></li>
-          <li><p>Mixins provide simple, flexible inheritance model.</p></li>
+          <li><p>Runs directly in the browser - what you see in the IDE is what you get in your browser's debug
+          session.  Annotated.js is legal javascript and runs natively
+          in the browser without eval, code rewriting or server-side compilation - it's also
+          fully compatible with popular minifiers, parallel or AJAX-y script loaders, 
+          code optimiziers, etc.
+          </p></li>
+          <li><p>Namespaces, Classes, Modules and Mixins define a clean, simple API for defining your
+          application's architecture with compiler-checked rigor.  Namespaces are 
+          declarative and self-instantiating, reporting conflicts and invalid architectures;  
+          Classes, Modules &amp; Mixins let you quickly design a flexible, inheritance based &amp; 
+          compiler verified architecture.</p></li>
           <li><p>Type Testing allows for you to define computational constraints 
-          which are optionally validated by the runtime</p></li>
-          <li><p>Modules and classes are declarative, so can be defined in any order, 
-          in any annotated block, in any file.  Annotated.js handles
-          dependencies, load ordering, automatically creates nested namespaces, even detects
-          circular and invalid dependencies in your architecture!</p></li>
-          <li><p>Run the dependency analysis offline &amp; deploy your application with 
-          no reflection overhead.</p></li>
+          which are optionally validated by the runtime.  Restrict unintended or unspecified usage of your API,
+          prevent invalid, undefined or NaN values from propagating into your data model &amp; obscuring
+          debugging, test that your application is accessing each interface the way you intended.</p></li>
+          <li><p>Optionally run the compiler offline via node.js &amp; deploy your application with 
+          no reflection overhead - the Annotated Runtime minimized is less than 1k, and typically loads
+          20x-100x times faster</p></li>
           </ul>
           <h2>Usage</h2>
 
           <h3>Install</h3>
-          <p>Annotated.js has not yet reached a stable release, so you will need to check 
-          out the source from github:</p>
+          <p>Though feature complete, Annotated.js has not yet reached a stable release, so you 
+          will need to check out the source from github:</p>
           
           <a href="http://github.com/benchmark-solutions/methadone">Download Annotated.js</a>
           
@@ -299,7 +301,7 @@
           compilation step would provide, while preserving 1:1 code correspondence in the
           IDE and browser.</p>  
 
-          <img src="architecture.png" style=" padding-left: 100px; padding-top: 30px; padding-bottom: 20px;">
+          <img src="architecture.png" style=" padding-left: 100px; padding-top: 30px; padding-bottom: 30px;">
  
           <p>You must configure your application's deploy scripts to generate an ir.js 
           file and include it in the generated page.  To generate such a file:</p>
