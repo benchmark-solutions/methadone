@@ -1,0 +1,351 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Annotated.js</title>
+    <link rel="stylesheet" type="text/css" href="annotated.css">
+
+    <link href="prettify.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="prettify.js"></script>
+
+  </head>
+  <body>
+      <div id="column">
+      <img src="annotated.png">
+      
+      <div id="body">
+          <p>For large, complex Javascript applications or libraries, Annotated.js
+          provides a language extension for expressing the structure & validity of 
+          your code.  By annotating your regular Javascript code, the Annotated.js 
+          runtime provides additional language features like declarative namespaces, 
+          class and module macros, and runtime type testing. </p>
+
+          <ul>
+          <li><p>Runs directly in the browser with no code transformation or
+          compilation - what you see in the IDE is what you get in the
+          browser.</p></li>
+          <li><p>Classes and Modules define a clean, simple API for structuring
+          Object Oriented Applications in Javascript, with an intuitive
+          mapping to standard Javascript Objects.</p></li>
+          <li><p>Mixins provide simple, flexible inheritance model.</p></li>
+          <li><p>Type Testing allows for you to define computational constraints 
+          which are optionally validated by the runtime</p></li>
+          <li><p>Modules and classes are declarative, so can be defined in any order, 
+          in any annotated block, in any file.  Annotated.js handles
+          dependencies, load ordering, automatically creates nested namespaces, even detects
+          circular and invalid dependencies in your architecture!</p></li>
+          <li><p>Run the dependency analysis offline &amp; deploy your application with 
+          no reflection overhead.</p></li>
+          </ul>
+
+          <h2>Usage</h2>
+
+          <h3>Install</h3>
+          <p>Annotated.js has not yet reached a stable release, so you will need to check 
+          out the source from github:</p>
+          
+          <a href="http://github.com/benchmark-solutions/methadone">Download Annotated.js</a>
+          
+          <p>In order to use Annotated.js in your Javascript project, you will need
+          to ensure that it is the first script loaded on your page - Annotated
+          will ensure that all further load order dependencies are satisfied.</p>
+
+          <pre><code class="prettyprint">
+  &lt;head&gt;
+      &lt;script src="lib/annotated.js"&gt;&lt;/script&gt;
+
+      &lt;!-- Your application's script tags go here ... --&gt;
+
+  &lt;/head&gt;
+          </code></pre>
+
+          <p>Because Annotated.js uses code reflection to accomplish it's magic,
+          Annotated.js API functions do not work like vanilla Javascript
+          functions - they must be embedded in a call to the global function 
+          annotated to work.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      // Your Annotated Javascript code goes here ...
+
+  });
+          </code></pre>
+          
+          <h3>Modules &amp; Classes</h3>
+
+          <p>Within a annotated block, you can declare Modules and Classes (which
+          will execute asynchronously), as well as write standard javascript 
+          (which will execute synchronously).  </p>
+
+          <p>A Module is simply an object which can be referenced from other
+          Modules or Classes as a dependency - analogous to a module in Ruby or
+          a static class in Java.  Modules have the same syntax as Java
+          namespaces, but act just like globally defined Javascript objects - 
+          the only restriction being that Modules (unlike Classes) may not
+          have public properties, only functions or objects.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Module: Org.App.DateUtils = function() {
+          this.daysOfWeek = function() { 
+              return [ 'Mo', 'Tu', 'We', 'Th', 'Fr' ]; 
+          }
+          this.printDate =  function() {
+              var today = (new Date()).toString();
+              console.log('The current date is ' + today);
+          };
+      }
+
+      // Now that we've declared our module, you can use it in any
+      // other module or class the same way you would use a standard
+      // Javascript object;  Annotated.js will ensure that they are
+      // instantiated in the correct order, or warn you if such an 
+      // order does not exist.
+      
+      Module: Org.App.OtherModule = function() {
+           console.log(Org.App.DateUtils.daysOfWeek()[2]);
+      } // prints 'Wed' on pageload
+
+  });
+          </code></pre>
+
+          <p>A Class is simply a Javascript constructor function attached to a
+          global object - analagous to Ruby or Java classes.  Any properties or
+          functions declared in a class will only be accessible once the Class
+          is insantiated with the 'new' keyword, and any private members will be
+          private to that instance - identically to a standard Javascript
+          Object.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Class: Org.App.MyClass = function() {
+          this.counter  = 0;
+          this.increment = function() {
+              this.counter ++;
+          };
+      }
+
+      Module: Org.App.MyClass = function() {
+          var instance      = new Org.MyApp.MyClass();
+          var otherInstance = new Org.MyApp.MyClass();
+
+          console.log(instance.counter);       // prints 0
+          instance.increment();
+          console.log(instance.counter);       // prints 1
+          console.log(otherInstance.counter);  // prints 0
+      }
+
+  });
+          </code></pre>
+
+          <p>That's it!  Annotated.js does the heavy lifting for you.</p>
+
+          <h3>Mixins</h3>
+
+          <p>Annotated.js supports mixins via the mixin annotation - analagous 
+          to Ruby mixins.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Class: Org.App.Cat = function() {
+          Mixin: Org.App.Animal;
+      }
+
+      // You can alias mixins, too!
+
+      Class: Org.App.Dog = function() {
+          Mixin: var __super__ = Org.App.Animal;
+          this.speak = function() { 
+              __super__.speak(); 
+              console.log(" subclass Dog");  
+          }
+      }
+
+      Module: Org.App.Animal = function() {
+          this.speak = function() { console.log("Animal"); }
+      }
+
+      Module: Org.App.Main = function() {
+          var cat = new Org.App.Cat();
+          var dog = new Org.App.Dog();
+          cat.speak();   // prints "Animal"
+          dog.speak();   // prints "Animal subclass Dog"
+      }
+
+  });
+          </code></pre>
+
+          <p>When you mixin a class, Annotated.js will instantiate an instance of
+          this class for you regardless of whether or not you provide
+          constructor arguments.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      // With constructor args
+      Class: Org.App.Cat = function() {
+          Mixin: Org.App.Animal('meow');
+      }
+
+      // Without constructor args
+      Class: Org.App.Dog = function() {
+          Mixin: Org.App.Animal;
+      }       
+
+      Class: Org.App.Animal = function(sound) {
+          sound = sound || 'woof';
+          this.speak = function() { console.log(sound); }
+      }
+
+      Module: Org.App.Main = function() {
+          var cat = new Org.App.Cat();
+          var dog = new Org.App.Dog();
+          cat.speak();   // prints "meow"
+          dog.speak();   // prints "woof"
+      }
+
+  });
+          </code></pre>
+
+          <h3>Type Testing</h3>
+
+          <p>Annotated.js has an annotation shortcut for runtime type testing - a 
+          runtime exception will be thrown if the the arguments to a 
+          Constructor or Method do not match their annotated types.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Class: Org.App.Car = function(manufacturer, make, year) {
+          manufacturer :String;
+          make         :String;
+          year         :Number;
+
+          this.honkHorn(times) {
+              times :Number;
+
+              for (var i = 0; i &lt; times; i ++) {
+                  console.log(
+                      "A " + year + " " 
+                      + manufacturer + " " 
+                      + make + " honks!"
+                  );
+              }
+          }
+      }
+
+  });
+          </code></pre>
+
+          <p>Currently recognized types are Object, Array, String, Number, Function, 
+          Boolean and any declared Module or Class.  Values that are undefined or 
+          null will not typecheck if they are annotated.</p>
+
+          <h3>Strict Mode</h3>
+
+          <p>For stronger control over your code's usage & organization, Annotated.js'
+          Compiler includes a strict mode which adds additional
+          dependency safety and required explicit dependency declaration.
+          Strict mode is enabled via a Annotated.js annotation.</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Strict: true;
+
+      // your code goes here ...
+
+  });
+          </code></pre>
+
+          <p>You need only apply this annotation once, in any annotated code block;
+          once set, all modules and classes in all scripts will be treated 
+          strictly.  In strict mode, dependencies must be declared explicitly 
+          with the Import annotation:</p>
+
+          <pre><code class="prettyprint">
+  annotated(function() {
+
+      Strict: true;
+
+      Module: Org.App.Cat = function() {
+          Import: Org.App.AnimalUtils;
+          this.meow = function() { 
+              Org.App.AnimalUtils.say("Meow, bitches!"); 
+              };
+
+          // Imports can be given aliases too
+          Import: var alias = Org.App.BathUtils;
+          this.wash = alias.wash;
+      }
+
+      // This module will cause your application to error on load, 
+      // as it contains a reference to Cat with no corresponding 
+      // Import
+
+      Module: Org.App.Invalid = function() {
+           Org.App.Cat.meow();
+      }
+
+  });
+          </code></pre>
+
+          <h3>Initialization Record</h3>
+          
+          
+          
+          <p>If application start time is critical for your deployed application, you can
+          calculate an Initialization Record for your application offline, then include
+          the generated ir.js file in your application's head tag to eliminate the
+          overhead associated with startup overhead - providing the same speed-up a
+          compilation step would provide, while preserving 1:1 code correspondence in the
+          IDE and browser.  Simply follow these instructions:</p>
+
+ <img src="architecture.png" style="float: right; padding-left: 30px; padding-top: 30px; padding-bottom: 20px;">
+          <ol>
+          <li><p>Install Node.js &amp; NPM</p></li>
+          <li><p>'npm install'</p></li>
+          <li><p>'node node_src/preprocess.js' followed by a list of directories/files
+          you want to analyze.</p></li>
+         
+          <li><p>Include the resulting script ir.js in your application's head tag,
+          immediately after annotated.js</p></li>
+          
+          <li><p>Buckle your seatbelts (because a high performance sportscar is an
+          appropriate metaphor for the loadtime speedup your application will
+          experience)</p></li>
+          </ol>
+          
+          <h2>Development</h2>
+
+          <h3>Bootstrap</h3>
+
+          <p>If you would like to hack on Annotated.js, you can compile the code
+          yourself with node.js:</p>
+
+          <pre><code class="prettyprint">
+  cp lib/annotated.js .
+  node src_node/compile.js src_annotated
+          </code></pre>
+
+          <p>This will overwrite the annotated.js in your project root with the 
+          precompiled library.  You can then use the resultant annotated.js to run the 
+          compilation again:</p>
+
+          <pre><code class="prettyprint">
+  node src_node/compile.js src_annotated
+          </code></pre>
+
+          <p>Note that the compiler currently will not work correctly on most other
+          applications, as it only recognizes a restricted subset of
+          Annotated.js necessary for self-hosting</p>
+          
+      </div>
+      </div>
+      <script>prettyPrint()</script>
+  </body>
+</html>
