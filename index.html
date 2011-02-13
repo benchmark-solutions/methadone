@@ -99,12 +99,6 @@
           };
       }
 
-      // Now that we've declared our module, you can use it in any
-      // other module or class the same way you would use a standard
-      // Javascript object;  Annotated.js will ensure that they are
-      // instantiated in the correct order, or warn you if such an 
-      // order does not exist.
-      
       Module: Org.App.OtherModule = function() {
            console.log(Org.App.DateUtils.daysOfWeek()[2]);
       } // prints 'Wed' on pageload
