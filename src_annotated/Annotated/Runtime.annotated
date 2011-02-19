@@ -21,7 +21,6 @@
 *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*
 */
 
 annotated(function() {
@@ -355,7 +354,12 @@ annotated(function() {
                     copy = options[ name ];
                     if (target !== copy && copy !== undefined) {
                         if (target[name]) {
-
+                            if (copy === undefined) {
+                               // Nothing to do in this case   
+                            } else {
+                               // Hope you saved a reference to the parent ...
+                               target[ name ] = copy;
+                            }
                         } else {
                             target[ name ] = copy;
                         }
