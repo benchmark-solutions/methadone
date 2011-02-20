@@ -354,14 +354,14 @@ annotated(function() {
                     copy = options[ name ];
                     if (target !== copy && copy !== undefined) {
                         if (target[name]) {
-                            if (copy === undefined) {
-                               // Nothing to do in this case   
-                            } else {
-                               // Hope you saved a reference to the parent ...
-                               target[ name ] = copy;
-                            }
-                        } else {
-                            target[ name ] = copy;
+                             if (copy === undefined) {
+                                 // Nothing to do in this case   
+                             } else {
+                                 // Hope you saved a reference to the parent ...
+                                 target[ name ] = copy;
+                             }
+                         } else {
+                             target[ name ] = copy;
                         }
                     }
                 }

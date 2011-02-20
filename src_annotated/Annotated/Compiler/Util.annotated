@@ -78,7 +78,7 @@ annotated(function() {
          * @param o
          */
         this.keys = function(o) {
-			o :Object;
+		
             var result = [];
             for (var name in o) { if (o.hasOwnProperty(name)) result.push(name); }
             return result;

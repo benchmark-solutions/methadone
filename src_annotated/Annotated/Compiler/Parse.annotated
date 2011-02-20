@@ -33,9 +33,9 @@ annotated(function() {
         Import: Annotated.Runtime;
 
         var identifier       = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)";
-        var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*"
+        var dotIdentifier    = "([a-zA-Z_\\$][a-zA-Z0-9_\\$]*)(\.([a-zA-Z_\\$][a-zA-Z0-9_\\$]*))*";
         var statementStart   = "(^|;|{)";
-        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/|new|\\))"
+        var parameterStart   = "(^|;|{|\\(|\\*|\\+|-|=|~|\\!|\\/|new|\\))";
         var __whiteSpace__   = "\\s*?";
         var noIdentifier     = "(?![a-zA-Z0-9_\\$])";
 
@@ -68,12 +68,6 @@ annotated(function() {
                 var module_name = code.slice(module_regex.lastIndex).match(/\s*(.*?)\s*?=\s*?function/)[1];
                 var module_type = moduleParsed[2];
 
-                // var conflict = U.exists(module_name)
-                //                if (conflict) {
-                //                    U.logError("Module name " + module_name + " conflicts with " + conflict);
-                //                    break;
-                //                };
-               
                 this.validateModule(module_name);
                 S.getInstance().uninitialized[module_name] = true;
                 S.getInstance().modules[module_name] = {

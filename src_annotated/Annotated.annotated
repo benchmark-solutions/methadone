@@ -56,6 +56,11 @@ annotated(function() {
             if (!getState().ir) {
                 for (var arg in cache) {
                     if (cache.hasOwnProperty(arg)) {
+                        for (var obj in cache[arg]) {
+                            if (cache[arg].hasOwnProperty(obj) && U.keys(cache[arg][obj]).length === 0) {
+                                delete(cache[arg][obj])
+                            }
+                        }
                         U.extend(U.getOrCreate(arg), cache[arg]);
                     }
                 }
