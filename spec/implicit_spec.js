@@ -1,3 +1,5 @@
+// -*- Mode: js; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2; -*-
+
 describe("Nonstrict mode", function() {
 	function methtest(code) {
 		annotated.reset();
@@ -145,8 +147,14 @@ describe("Nonstrict mode", function() {
 
 	it("Handles Class Mixins", function() {
 		var errors = methtest(function() {
+			Class: Inferred.InstanceMixinClass = function() {
+				this.result = "FAIL";
+			  this.method = function() { return "PASS"; }
+			}
+
 			Class: Inferred.MixinClass = function() {
 				this.result = "FAIL";
+				this.method2 = function() { return "PASS"; }
 			}
 
 			Module: Inferred.MixinModule = function() {
@@ -154,6 +162,7 @@ describe("Nonstrict mode", function() {
 			}
 
 			Class: Inferred.MixinClass2 = function() {
+				Mixin: Inferred.InstanceMixinClass();
 				Mixin: Inferred.MixinClass;
 				this.result = this.result.replace("FAIL", "PASS");
 			}
@@ -161,6 +170,8 @@ describe("Nonstrict mode", function() {
 
 		expect(new Inferred.MixinClass().result).toEqual("FAIL");
 		expect(new Inferred.MixinClass2().result).toEqual("PASS");
+		expect(new Inferred.MixinClass2().method()).toEqual("PASS");
+		expect(new Inferred.MixinClass2().method2()).toEqual("PASS");
 		expect(Inferred.MixinModule.result()).toEqual("PASS");
 		expect(errors.length).toEqual(0);
 	});
